@@ -3,9 +3,6 @@
 #Notes: need to check for: parted, fdisk, wget, mkfs.*, mkimage, md5sum
 
 MIRROR="http://rcn-ee.net/deb/tools/"
-MLO="MLO-beagleboard-1.44+r10+gitr1c9276af4d6a5b7014a7630a1abeddf3b3177563-r10"
-XLOAD="x-load-beagleboard-1.44+r10+gitr1c9276af4d6a5b7014a7630a1abeddf3b3177563-r10.bin.ift"
-UBOOT="u-boot-beagleboard-2010.03-rc1+r48+gitr946351081bd14e8bf5816fc38b82e004a0e6b4fe-r48.bin"
 
 unset MMC
 
@@ -20,9 +17,19 @@ function dl_xload_uboot {
  echo "Downloading X-loader and Uboot"
  echo ""
 
- wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${MIRROR}${MLO}
- wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${MIRROR}${XLOAD}
- wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${MIRROR}${UBOOT}
+ wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${MIRROR}tools/latest/bootloader
+
+ MLO=$(cat ${DIR}/dl/bootloader | grep "ABI:1 MLO" | awk '{print $3}')
+ XLOAD=$(cat ${DIR}/dl/bootloader | grep "ABI:1 XLOAD" | awk '{print $3}')
+ UBOOT=$(cat ${DIR}/dl/bootloader | grep "ABI:1 UBOOT" | awk '{print $3}')
+
+ wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${MLO}
+ wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${XLOAD}
+ wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${UBOOT}
+
+ MLO=${MLO##*/}
+ XLOAD=${XLOAD##*/}
+ UBOOT=${UBOOT##*/}
 }
 
 function cleanup_sd {
@@ -78,14 +85,15 @@ echo "done"
 }
 
 function check_mmc {
- FDISK=$(sudo fdisk -l | grep "Disk ${MMC}" | awk '{print $2}')
+ DISK_NAME="Disk|Platte"
+ FDISK=$(sudo fdisk -l | grep "[${DISK_NAME}] ${MMC}" | awk '{print $2}')
 
  if test "-$FDISK-" = "-$MMC:-"
  then
   echo ""
   echo "I see..."
   echo "sudo fdisk -l:"
-  sudo fdisk -l | grep "Disk /dev/" --color=never
+  sudo fdisk -l | grep "[${DISK_NAME}] /dev/" --color=never
   echo ""
   echo "mount:"
   mount | grep -v none | grep "/dev/" --color=never
@@ -98,7 +106,7 @@ function check_mmc {
   echo "Are you sure? I Don't see [${MMC}], here is what I do see..."
   echo ""
   echo "sudo fdisk -l:"
-  sudo fdisk -l | grep "Disk /dev/" --color=never
+  sudo fdisk -l | grep "[${DISK_NAME}] /dev/" --color=never
   echo ""
   echo "mount:"
   mount | grep -v none | grep "/dev/" --color=never
