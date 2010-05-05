@@ -2,7 +2,7 @@
 
 #Notes: need to check for: parted, fdisk, wget, mkfs.*, mkimage, md5sum
 
-MIRROR="http://rcn-ee.net/deb/tools/"
+MIRROR="http://rcn-ee.net/deb/"
 
 unset MMC
 
