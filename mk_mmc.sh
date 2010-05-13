@@ -12,12 +12,14 @@ PARTITION_PREFIX=""
 DIR=$PWD
 
 function dl_xload_uboot {
+
  mkdir -p ${DIR}/dl/
 
  echo ""
  echo "Downloading X-loader and Uboot"
  echo ""
 
+ rm -f ${DIR}/dl/bootloader || true
  wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${MIRROR}tools/latest/bootloader
 
  MLO=$(cat ${DIR}/dl/bootloader | grep "ABI:1 MLO" | awk '{print $3}')
@@ -165,6 +167,4 @@ fi
  dl_xload_uboot
  cleanup_sd
  create_partitions
-
-
 
