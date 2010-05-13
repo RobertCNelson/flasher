@@ -7,6 +7,7 @@ MIRROR="http://rcn-ee.net/deb/"
 unset MMC
 
 BOOT_LABEL=boot
+PARTITION_PREFIX=""
 
 DIR=$PWD
 
@@ -38,8 +39,8 @@ function cleanup_sd {
  echo "Umounting Partitions"
  echo ""
 
- sudo umount ${MMC}1 &> /dev/null || true
- sudo umount ${MMC}2 &> /dev/null || true
+ sudo umount ${MMC}${PARTITION_PREFIX}1 &> /dev/null || true
+ sudo umount ${MMC}${PARTITION_PREFIX}2 &> /dev/null || true
 
  sudo parted -s ${MMC} mklabel msdos
 }
@@ -64,22 +65,22 @@ echo ""
 echo "Formating Boot Partition"
 echo ""
 
-sudo mkfs.vfat -F 16 ${MMC}1 -n ${BOOT_LABEL}
+sudo mkfs.vfat -F 16 ${MMC}${PARTITION_PREFIX}1 -n ${BOOT_LABEL}
 
-sudo rm -rfd ./disk || true
+sudo rm -rfd ${DIR}/disk || true
 
-mkdir ./disk
-sudo mount ${MMC}1 ./disk
+mkdir ${DIR}/disk
+sudo mount ${MMC}${PARTITION_PREFIX}1 ${DIR}/disk
 
-sudo cp -v ${DIR}/dl/${MLO} ./disk/MLO
-sudo cp -v ${DIR}/dl/${XLOAD} ./disk/x-load.bin.ift
-sudo cp -v ${DIR}/dl/${UBOOT} ./disk/u-boot.bin
-sudo mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ./reset.cmd ./disk/boot.scr
+sudo cp -v ${DIR}/dl/${MLO} ${DIR}/disk/MLO
+sudo cp -v ${DIR}/dl/${XLOAD} ${DIR}/disk/x-load.bin.ift
+sudo cp -v ${DIR}/dl/${UBOOT} ${DIR}/disk/u-boot.bin
+sudo mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${DIR}/reset.cmd ${DIR}/disk/boot.scr
 
-cd ./disk
+cd ${DIR}/disk
 sync
-cd ..
-sudo umount ./disk || true
+cd ${DIR}/
+sudo umount ${DIR}/disk || true
 echo "done"
 
 }
@@ -147,6 +148,10 @@ while [ ! -z "$1" ]; do
         --mmc)
             checkparm $2
             MMC="$2"
+	    if [[ "${MMC}" =~ "mmcblk" ]]
+            then
+	        PARTITION_PREFIX="p"
+            fi
             check_mmc 
             ;;
     esac
