@@ -1,5 +1,5 @@
 echo "Starting NAND UPGRADE, do not REMOVE SD CARD or POWER till Complete"
-fatload mmc 0:1 0x80200000 x-load.bin.ift
+fatload mmc 0:1 0x80200000 MLO
 nandecc hw
 nand erase 0 80000
 nand write 0x80200000 0 20000

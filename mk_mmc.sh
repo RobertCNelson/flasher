@@ -23,15 +23,12 @@ function dl_xload_uboot {
  wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${MIRROR}tools/latest/bootloader
 
  MLO=$(cat ${DIR}/dl/bootloader | grep "ABI:1 MLO" | awk '{print $3}')
- XLOAD=$(cat ${DIR}/dl/bootloader | grep "ABI:1 XLOAD" | awk '{print $3}')
  UBOOT=$(cat ${DIR}/dl/bootloader | grep "ABI:1 UBOOT" | awk '{print $3}')
 
  wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${MLO}
- wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${XLOAD}
  wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${UBOOT}
 
  MLO=${MLO##*/}
- XLOAD=${XLOAD##*/}
  UBOOT=${UBOOT##*/}
 }
 
@@ -75,7 +72,6 @@ mkdir ${DIR}/disk
 sudo mount ${MMC}${PARTITION_PREFIX}1 ${DIR}/disk
 
 sudo cp -v ${DIR}/dl/${MLO} ${DIR}/disk/MLO
-sudo cp -v ${DIR}/dl/${XLOAD} ${DIR}/disk/x-load.bin.ift
 sudo cp -v ${DIR}/dl/${UBOOT} ${DIR}/disk/u-boot.bin
 sudo mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${DIR}/reset.cmd ${DIR}/disk/boot.scr
 
@@ -89,14 +85,14 @@ echo "done"
 
 function check_mmc {
  DISK_NAME="Disk|Platte"
- FDISK=$(sudo fdisk -l | grep "[${DISK_NAME}] ${MMC}" | awk '{print $2}')
+ FDISK=$(sudo fdisk -l 2>/dev/null | grep "[${DISK_NAME}] ${MMC}" | awk '{print $2}')
 
  if test "-$FDISK-" = "-$MMC:-"
  then
   echo ""
   echo "I see..."
   echo "sudo fdisk -l:"
-  sudo fdisk -l | grep "[${DISK_NAME}] /dev/" --color=never
+  sudo fdisk -l 2>/dev/null | grep "[${DISK_NAME}] /dev/" --color=never
   echo ""
   echo "mount:"
   mount | grep -v none | grep "/dev/" --color=never
@@ -109,7 +105,7 @@ function check_mmc {
   echo "Are you sure? I Don't see [${MMC}], here is what I do see..."
   echo ""
   echo "sudo fdisk -l:"
-  sudo fdisk -l | grep "[${DISK_NAME}] /dev/" --color=never
+  sudo fdisk -l 2>/dev/null | grep "[${DISK_NAME}] /dev/" --color=never
   echo ""
   echo "mount:"
   mount | grep -v none | grep "/dev/" --color=never
