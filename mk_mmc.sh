@@ -73,7 +73,7 @@ sudo mount ${MMC}${PARTITION_PREFIX}1 ${DIR}/disk
 
 sudo cp -v ${DIR}/dl/${MLO} ${DIR}/disk/MLO
 sudo cp -v ${DIR}/dl/${UBOOT} ${DIR}/disk/u-boot.bin
-sudo mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${DIR}/reset.cmd ${DIR}/disk/boot.scr
+sudo mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${DIR}/reset.cmd ${DIR}/disk/user.scr
 
 cd ${DIR}/disk
 sync
