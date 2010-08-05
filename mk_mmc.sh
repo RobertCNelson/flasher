@@ -11,6 +11,31 @@ PARTITION_PREFIX=""
 
 DIR=$PWD
 
+function detect_software {
+
+#Currently only Ubuntu and Debian..
+#Working on Fedora...
+unset PACKAGE
+unset APT
+
+if [ ! $(which mkimage) ];then
+ echo "Missing uboot-mkimage"
+ PACKAGE="uboot-mkimage "
+ APT=1
+fi
+
+if [ ! $(which wget) ];then
+ echo "Missing wget"
+ PACKAGE="wget "
+ APT=1
+fi
+
+if [ "${APT}" ];then
+ echo "Installing Dependicies"
+ sudo aptitude install $PACKAGE
+fi
+}
+
 function dl_xload_uboot {
 
  mkdir -p ${DIR}/dl/
@@ -160,6 +185,7 @@ if [ ! "${MMC}" ];then
     usage
 fi
 
+ detect_software
  dl_xload_uboot
  cleanup_sd
  create_partitions
