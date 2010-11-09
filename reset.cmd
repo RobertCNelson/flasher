@@ -1,6 +1,9 @@
 if test "${beaglerev}" = "xMA"; then
 echo "xMA doesnt have NAND"
 exit
+else if test "${beaglerev}" = "xMB"; then
+echo "xMA doesnt have NAND"
+exit
 else
 echo "Starting NAND UPGRADE, do not REMOVE SD CARD or POWER till Complete"
 fatload mmc 0:1 0x80200000 MLO
@@ -18,5 +21,6 @@ nand write 0x80300000 80000 160000
 nand erase 260000 20000
 echo "UPGRADE Complete, REMOVE SD CARD and DELETE this boot.scr"
 exit
+fi
 fi
 
