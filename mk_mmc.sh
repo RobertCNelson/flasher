@@ -30,6 +30,7 @@ BOOT_LABEL=boot
 PARTITION_PREFIX=""
 
 DIR=$PWD
+TEMPDIR=$(mktemp -d)
 
 function detect_software {
 
@@ -58,20 +59,19 @@ fi
 
 function dl_xload_uboot {
 
- mkdir -p ${DIR}/dl/
-
  echo ""
  echo "Downloading X-loader and Uboot"
  echo ""
 
- rm -f ${DIR}/dl/bootloader || true
- wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${MIRROR}tools/latest/bootloader
+ mkdir ${TEMPDIR}/dl
 
- MLO=$(cat ${DIR}/dl/bootloader | grep "ABI:1 MLO" | awk '{print $3}')
- UBOOT=$(cat ${DIR}/dl/bootloader | grep "ABI:1 UBOOT" | awk '{print $3}')
+ wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}tools/latest/bootloader
 
- wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${MLO}
- wget -c --no-verbose --directory-prefix=${DIR}/dl/ ${UBOOT}
+ MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "ABI:1 MLO" | awk '{print $3}')
+ UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "ABI:1 UBOOT" | awk '{print $3}')
+
+ wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MLO}
+ wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${UBOOT}
 
  MLO=${MLO##*/}
  UBOOT=${UBOOT##*/}
@@ -116,19 +116,18 @@ echo ""
 
 sudo mkfs.vfat -F 16 ${MMC}${PARTITION_PREFIX}1 -n ${BOOT_LABEL}
 
-sudo rm -rfd ${DIR}/disk || true
+mkdir ${TEMPDIR}/disk
 
-mkdir ${DIR}/disk
-sudo mount ${MMC}${PARTITION_PREFIX}1 ${DIR}/disk
+sudo mount ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk
 
-sudo cp -v ${DIR}/dl/${MLO} ${DIR}/disk/MLO
-sudo cp -v ${DIR}/dl/${UBOOT} ${DIR}/disk/u-boot.bin
-sudo mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${DIR}/reset.cmd ${DIR}/disk/user.scr
+sudo cp -v ${TEMPDIR}/dl/${MLO} ${TEMPDIR}/disk/MLO
+sudo cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/u-boot.bin
+sudo mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${DIR}/reset.cmd ${TEMPDIR}/disk/user.scr
 
-cd ${DIR}/disk
+cd ${TEMPDIR}/disk
 sync
-cd ${DIR}/
-sudo umount ${DIR}/disk || true
+cd ${TEMPDIR}/
+sudo umount ${TEMPDIR}/disk || true
 echo "done"
 
 }
