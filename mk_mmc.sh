@@ -25,6 +25,7 @@
 MIRROR="http://rcn-ee.net/deb/"
 
 unset MMC
+unset BETA
 
 BOOT_LABEL=boot
 PARTITION_PREFIX=""
@@ -67,8 +68,14 @@ function dl_xload_uboot {
 
  wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}tools/latest/bootloader
 
- MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "ABI:1 MLO" | awk '{print $3}')
- UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "ABI:1 UBOOT" | awk '{print $3}')
+ if [ "$BETA" ];then
+  ABI="ABX"
+ else
+  ABI="ABI"
+ fi
+
+ MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:1 MLO" | awk '{print $3}')
+ UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:1 UBOOT" | awk '{print $3}')
 
  wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MLO}
  wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${UBOOT}
@@ -199,6 +206,9 @@ while [ ! -z "$1" ]; do
 	        PARTITION_PREFIX="p"
             fi
             check_mmc 
+            ;;
+        --beta)
+            BETA=1
             ;;
     esac
     shift
