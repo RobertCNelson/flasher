@@ -74,8 +74,8 @@ function dl_xload_uboot {
   ABI="ABI"
  fi
 
- MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:1 MLO" | awk '{print $3}')
- UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:1 UBOOT" | awk '{print $3}')
+ MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:1:MLO" | awk '{print $3}')
+ UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:1:UBOOT" | awk '{print $3}')
 
  wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MLO}
  wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${UBOOT}
