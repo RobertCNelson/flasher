@@ -33,6 +33,13 @@ PARTITION_PREFIX=""
 DIR=$PWD
 TEMPDIR=$(mktemp -d)
 
+#Check for gnu-fdisk
+#FIXME: GNU Fdisk seems to halt at "Using /dev/xx" when trying to script it..
+if fdisk -v | grep "GNU Fdisk" >/dev/null ; then
+ echo "Sorry, this script currently doesn't work with GNU Fdisk"
+ exit
+fi
+
 function detect_software {
 
 #Currently only Ubuntu and Debian..
