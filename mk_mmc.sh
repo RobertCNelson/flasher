@@ -26,6 +26,7 @@ MIRROR="http://rcn-ee.net/deb/"
 
 unset MMC
 unset BETA
+IN_VALID_UBOOT=1
 
 BOOT_LABEL=boot
 PARTITION_PREFIX=""
