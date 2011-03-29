@@ -103,7 +103,7 @@ function dl_xload_uboot {
 
  mkdir ${TEMPDIR}/dl
 
- wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}tools/latest/bootloader
+ wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}tools/latest/bootloader
 
  if [ "$BETA" ];then
   ABI="ABX"
@@ -111,8 +111,20 @@ function dl_xload_uboot {
   ABI="ABI"
  fi
 
+case "$SYSTEM" in
+    beagle_bx)
+
  MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:1:MLO" | awk '{print $2}')
  UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:1:UBOOT" | awk '{print $2}')
+
+        ;;
+    beagle)
+
+ MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:7:MLO" | awk '{print $2}')
+ UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:7:UBOOT" | awk '{print $2}')
+
+        ;;
+esac
 
  wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MLO}
  wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${UBOOT}
@@ -163,7 +175,6 @@ echo ""
 sudo mkfs.vfat -F 16 ${MMC}${PARTITION_PREFIX}1 -n ${BOOT_LABEL}
 
 mkdir ${TEMPDIR}/disk
-
 sudo mount ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk
 
 sudo cp -v ${TEMPDIR}/dl/${MLO} ${TEMPDIR}/disk/MLO
@@ -209,13 +220,42 @@ function check_mmc {
  fi
 }
 
+function check_uboot_type {
+ unset DO_UBOOT
+
+case "$UBOOT_TYPE" in
+    beagle_bx)
+
+ SYSTEM=beagle_bx
+ unset IN_VALID_UBOOT
+ DO_UBOOT=1
+
+        ;;
+    beagle)
+
+ SYSTEM=beagle
+ unset IN_VALID_UBOOT
+ DO_UBOOT=1
+
+        ;;
+esac
+
+ if [ "$IN_VALID_UBOOT" ] ; then
+   usage
+ fi
+}
+
 function usage {
-    echo "usage: $(basename $0) --mmc /dev/sdd"
+    echo "usage: $(basename $0) --mmc /dev/sdX --uboot <dev board>"
 cat <<EOF
 
-required options:
+Required Options:
 --mmc </dev/sdX>
     Unformated MMC Card
+
+--uboot <dev board>
+    beagle_bx - <Ax/Bx Models>
+    beagle - <Cx Models>
 
 Additional/Optional options:
 -h --help
@@ -247,6 +287,11 @@ while [ ! -z "$1" ]; do
             fi
             check_mmc 
             ;;
+        --uboot)
+            checkparm $2
+            UBOOT_TYPE="$2"
+            check_uboot_type
+            ;;
         --beta)
             BETA=1
             ;;
@@ -255,6 +300,12 @@ while [ ! -z "$1" ]; do
 done
 
 if [ ! "${MMC}" ];then
+    echo "ERROR: --mmc undefined"
+    usage
+fi
+
+if [ "$IN_VALID_UBOOT" ] ; then
+    echo "ERROR: --uboot undefined"
     usage
 fi
 
