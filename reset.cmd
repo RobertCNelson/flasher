@@ -1,8 +1,11 @@
 if test "${beaglerev}" = "xMA"; then
-echo "xMA doesnt have NAND"
+echo "xM A doesnt have NAND"
 exit
 else if test "${beaglerev}" = "xMB"; then
-echo "xMA doesnt have NAND"
+echo "xM B doesnt have NAND"
+exit
+else if test "${beaglerev}" = "xMC"; then
+echo "xM C doesnt have NAND"
 exit
 else
 echo "Starting NAND UPGRADE, do not REMOVE SD CARD or POWER till Complete"
