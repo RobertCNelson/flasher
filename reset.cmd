@@ -26,4 +26,5 @@ echo "FLASH UPGRADE Complete"
 exit
 fi
 fi
+fi
 
