@@ -250,17 +250,24 @@ function usage {
     echo "usage: $(basename $0) --mmc /dev/sdX --uboot <dev board>"
 cat <<EOF
 
+Script Version $SCRIPT_VERSION
+Bugs email: "bugs at rcn-ee.com"
+
 Required Options:
 --mmc </dev/sdX>
     Unformated MMC Card
+
+Additional/Optional options:
+-h --help
+    this help
+
+--probe-mmc
+    List all partitions
 
 --uboot <dev board>
     beagle_bx - <Ax/Bx Models>
     beagle - <Cx Models>
 
-Additional/Optional options:
--h --help
-    this help
 EOF
 exit
 }
@@ -278,6 +285,10 @@ while [ ! -z "$1" ]; do
         -h|--help)
             usage
             MMC=1
+            ;;
+        --probe-mmc)
+            MMC="/dev/idontknow"
+            check_mmc
             ;;
         --mmc)
             checkparm $2
