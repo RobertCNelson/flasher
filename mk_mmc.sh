@@ -38,7 +38,7 @@ TEMPDIR=$(mktemp -d)
 #fdisk 2.18.x/2.19.x, dos no longer default
 unset FDISK_DOS
 
-if fdisk -v | grep 2.1[8-9] >/dev/null ; then
+if test $(sudo fdisk -v | grep -o -E '2\.[0-9]+' | cut -d'.' -f2) -ge 18 ; then
  FDISK_DOS="-c=dos -u=cylinders"
 fi
 
