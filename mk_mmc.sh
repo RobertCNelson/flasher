@@ -179,7 +179,7 @@ mkdir ${TEMPDIR}/disk
 sudo mount ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk
 
 sudo cp -v ${TEMPDIR}/dl/${MLO} ${TEMPDIR}/disk/MLO
-sudo cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/u-boot.bin
+sudo cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/u-boot.img
 sudo mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${DIR}/reset.cmd ${TEMPDIR}/disk/user.scr
 sudo cp -v ${DIR}/uEnv.txt ${TEMPDIR}/disk/user.txt
 
