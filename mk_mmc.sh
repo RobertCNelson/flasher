@@ -119,10 +119,10 @@ case "$SYSTEM" in
  UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:1:UBOOT" | awk '{print $2}')
 
         ;;
-    beagle)
+    beagle_cx)
 
- MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:7:MLO" | awk '{print $2}')
- UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:7:UBOOT" | awk '{print $2}')
+ MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:4:MLO" | awk '{print $2}')
+ UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:4:UBOOT" | awk '{print $2}')
 
         ;;
 esac
@@ -232,9 +232,9 @@ case "$UBOOT_TYPE" in
  DO_UBOOT=1
 
         ;;
-    beagle)
+    beagle_cx)
 
- SYSTEM=beagle
+ SYSTEM=beagle_cx
  unset IN_VALID_UBOOT
  DO_UBOOT=1
 
@@ -266,7 +266,7 @@ Additional/Optional options:
 
 --uboot <dev board>
     beagle_bx - <Ax/Bx Models>
-    beagle - <Cx Models>
+    beagle_cx - <Cx Models>
 
 EOF
 exit
@@ -297,7 +297,7 @@ while [ ! -z "$1" ]; do
             then
 	        PARTITION_PREFIX="p"
             fi
-            check_mmc 
+            check_mmc
             ;;
         --uboot)
             checkparm $2
