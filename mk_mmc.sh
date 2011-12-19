@@ -26,6 +26,7 @@ MIRROR="http://rcn-ee.net/deb/"
 
 unset MMC
 unset BETA
+unset BOOTLOADER
 IN_VALID_UBOOT=1
 
 BOOT_LABEL=boot
@@ -107,22 +108,22 @@ function dl_xload_uboot {
  wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}tools/latest/bootloader
 
  if [ "$BETA" ];then
-  ABI="ABX"
+  ABI="ABX2"
  else
-  ABI="ABI"
+  ABI="ABI2"
  fi
 
 case "$SYSTEM" in
     beagle_bx)
 
- MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:1:MLO" | awk '{print $2}')
- UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:1:UBOOT" | awk '{print $2}')
+ MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:SPL" | awk '{print $2}')
+ UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:BOOT" | awk '{print $2}')
 
         ;;
     beagle_cx)
 
- MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:4:MLO" | awk '{print $2}')
- UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:4:UBOOT" | awk '{print $2}')
+ MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:SPL" | awk '{print $2}')
+ UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:BOOT" | awk '{print $2}')
 
         ;;
 esac
@@ -228,6 +229,7 @@ case "$UBOOT_TYPE" in
     beagle_bx)
 
  SYSTEM=beagle_bx
+ BOOTLOADER="BEAGLEBOARD_BX"
  unset IN_VALID_UBOOT
  DO_UBOOT=1
 
@@ -235,6 +237,7 @@ case "$UBOOT_TYPE" in
     beagle_cx)
 
  SYSTEM=beagle_cx
+ BOOTLOADER="BEAGLEBOARD_CX"
  unset IN_VALID_UBOOT
  DO_UBOOT=1
 
