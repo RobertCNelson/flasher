@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2009-2010 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2009-2012 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -182,6 +182,7 @@ sudo mount ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk
 sudo cp -v ${TEMPDIR}/dl/${MLO} ${TEMPDIR}/disk/MLO
 sudo cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/u-boot.img
 sudo mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${DIR}/reset.cmd ${TEMPDIR}/disk/user.scr
+cat ${DIR}/reset.cmd
 sudo cp -v ${DIR}/uEnv.txt ${TEMPDIR}/disk/user.txt
 
 cd ${TEMPDIR}/disk
