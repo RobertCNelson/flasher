@@ -206,10 +206,10 @@ function populate_boot {
 
  cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/u-boot.img
 
- mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${DIR}/reset.cmd ${TEMPDIR}/disk/user.scr
- cat ${DIR}/reset.cmd
- cp -v ${DIR}/uEnv.txt ${TEMPDIR}/disk/user.txt
- cp -v ${DIR}/uEnv.txt ${TEMPDIR}/disk/uEnv.txt
+ mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d "${DIR}/reset.cmd" ${TEMPDIR}/disk/user.scr
+ cat "${DIR}/reset.cmd"
+ cp -v "${DIR}/uEnv.txt" ${TEMPDIR}/disk/user.txt
+ cp -v "${DIR}/uEnv.txt" ${TEMPDIR}/disk/uEnv.txt
 
 cd ${TEMPDIR}/disk
 sync
