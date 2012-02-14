@@ -36,12 +36,6 @@ DIR=$PWD
 TEMPDIR=$(mktemp -d)
 
 #Software Qwerks
-#fdisk 2.18.x/2.19.x, dos no longer default
-unset FDISK_DOS
-
-if test $(sudo fdisk -v | grep -o -E '2\.[0-9]+' | cut -d'.' -f2) -ge 18 ; then
- FDISK_DOS="-c=dos -u=cylinders"
-fi
 
 #Check for gnu-fdisk
 #FIXME: GNU Fdisk seems to halt at "Using /dev/xx" when trying to script it..
@@ -145,12 +139,22 @@ NUM_MOUNTS=$(mount | grep -v none | grep "$MMC" | wc -l)
 }
 
 function create_partitions {
+ echo ""
+ echo "Using fdisk to create BOOT Partition"
+ echo "-----------------------------"
+ echo "Debug: now using FDISK_FIRST_SECTOR over fdisk's depreciated method..."
 
-sudo fdisk ${FDISK_DOS} ${MMC} << END
+ #With util-linux, 2.18+, the first sector is now 2048...
+ FDISK_FIRST_SECTOR="1"
+ if test $(fdisk -v | grep -o -E '2\.[0-9]+' | cut -d'.' -f2) -ge 18 ; then
+  FDISK_FIRST_SECTOR="2048"
+ fi
+
+fdisk ${MMC} << END
 n
 p
 1
-1
+${FDISK_FIRST_SECTOR}
 +64M
 t
 e
@@ -158,9 +162,11 @@ p
 w
 END
 
-sync
+ sync
 
-sudo parted --script ${MMC} set 1 boot on
+ echo "Setting Boot Partition's Boot Flag"
+ echo "-----------------------------"
+ parted --script ${MMC} set 1 boot on
 
 echo ""
 echo "Formating Boot Partition"
