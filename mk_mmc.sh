@@ -35,6 +35,17 @@ PARTITION_PREFIX=""
 DIR=$PWD
 TEMPDIR=$(mktemp -d)
 
+function check_root {
+if [[ $UID -ne 0 ]]; then
+ echo "$0 must be run as sudo user or root"
+ exit
+fi
+}
+
+function find_issue {
+
+check_root
+
 #Software Qwerks
 
 #Check for gnu-fdisk
@@ -43,6 +54,8 @@ if fdisk -v | grep "GNU Fdisk" >/dev/null ; then
  echo "Sorry, this script currently doesn't work with GNU Fdisk"
  exit
 fi
+
+}
 
 function detect_software {
 
@@ -291,6 +304,7 @@ while [ ! -z "$1" ]; do
             ;;
         --probe-mmc)
             MMC="/dev/idontknow"
+            check_root
             check_mmc
             ;;
         --mmc)
@@ -300,6 +314,7 @@ while [ ! -z "$1" ]; do
             then
 	        PARTITION_PREFIX="p"
             fi
+            check_root
             check_mmc
             ;;
         --uboot)
@@ -324,6 +339,7 @@ if [ "$IN_VALID_UBOOT" ] ; then
     usage
 fi
 
+ find_issue
  detect_software
  dl_xload_uboot
  cleanup_sd
