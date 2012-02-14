@@ -134,24 +134,23 @@ esac
  UBOOT=${UBOOT##*/}
 }
 
-function cleanup_sd {
-
+function unmount_all_drive_partitions {
  echo ""
- echo "Umounting Partitions"
- echo ""
+ echo "Unmounting Partitions"
+ echo "-----------------------------"
 
-NUM_MOUNTS=$(mount | grep -v none | grep "$MMC" | wc -l)
+ NUM_MOUNTS=$(mount | grep -v none | grep "$MMC" | wc -l)
 
  for (( c=1; c<=$NUM_MOUNTS; c++ ))
  do
   DRIVE=$(mount | grep -v none | grep "$MMC" | tail -1 | awk '{print $1}')
-  sudo umount ${DRIVE} &> /dev/null || true
+  umount ${DRIVE} &> /dev/null || true
  done
 
- sudo parted --script ${MMC} mklabel msdos
+ parted --script ${MMC} mklabel msdos
 }
 
-function create_partitions {
+function uboot_in_boot_partition {
  echo ""
  echo "Using fdisk to create BOOT Partition"
  echo "-----------------------------"
@@ -180,29 +179,58 @@ END
  echo "Setting Boot Partition's Boot Flag"
  echo "-----------------------------"
  parted --script ${MMC} set 1 boot on
+}
 
-echo ""
-echo "Formating Boot Partition"
-echo ""
+function format_boot_partition {
+ echo "Formating Boot Partition"
+ echo "-----------------------------"
+ mkfs.vfat -F 16 ${MMC}${PARTITION_PREFIX}1 -n ${BOOT_LABEL}
+}
 
-sudo mkfs.vfat -F 16 ${MMC}${PARTITION_PREFIX}1 -n ${BOOT_LABEL}
+function create_partitions {
 
-mkdir ${TEMPDIR}/disk
-sudo mount ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk
+ uboot_in_boot_partition
+ format_boot_partition
+}
 
-sudo cp -v ${TEMPDIR}/dl/${MLO} ${TEMPDIR}/disk/MLO
-sudo cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/u-boot.img
-sudo mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${DIR}/reset.cmd ${TEMPDIR}/disk/user.scr
-cat ${DIR}/reset.cmd
-sudo cp -v ${DIR}/uEnv.txt ${TEMPDIR}/disk/user.txt
-sudo cp -v ${DIR}/uEnv.txt ${TEMPDIR}/disk/uEnv.txt
+function populate_boot {
+ echo "Populating Boot Partition"
+ echo "-----------------------------"
+
+ mkdir -p ${TEMPDIR}/disk
+
+ if mount -t vfat ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk; then
+
+ cp -v ${TEMPDIR}/dl/${MLO} ${TEMPDIR}/disk/MLO
+
+ cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/u-boot.img
+
+ mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${DIR}/reset.cmd ${TEMPDIR}/disk/user.scr
+ cat ${DIR}/reset.cmd
+ cp -v ${DIR}/uEnv.txt ${TEMPDIR}/disk/user.txt
+ cp -v ${DIR}/uEnv.txt ${TEMPDIR}/disk/uEnv.txt
 
 cd ${TEMPDIR}/disk
 sync
-cd ${TEMPDIR}/
-sudo umount ${TEMPDIR}/disk || true
-echo "done"
+cd "${DIR}/"
 
+ echo "Debug: Contents of Boot Partition"
+ echo "-----------------------------"
+ ls -lh ${TEMPDIR}/disk/
+ echo "-----------------------------"
+
+umount ${TEMPDIR}/disk || true
+
+ echo "Finished populating Boot Partition"
+ echo "-----------------------------"
+else
+ echo "-----------------------------"
+ echo "Unable to mount ${MMC}${PARTITION_PREFIX}1 at ${TEMPDIR}/disk to complete populating Boot Partition"
+ echo "Please retry running the script, sometimes rebooting your system helps."
+ echo "-----------------------------"
+ exit
+fi
+ echo "mk_mmc.sh script complete"
 }
 
 function check_mmc {
@@ -342,6 +370,8 @@ fi
  find_issue
  detect_software
  dl_xload_uboot
- cleanup_sd
+
+ unmount_all_drive_partitions
  create_partitions
+ populate_boot
 
