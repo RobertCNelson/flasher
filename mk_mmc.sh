@@ -22,8 +22,6 @@
 
 #Notes: need to check for: parted, fdisk, wget, mkfs.*, mkimage, md5sum
 
-MIRROR="http://rcn-ee.net/deb/"
-
 unset MMC
 unset BETA
 unset BOOTLOADER
@@ -31,6 +29,8 @@ IN_VALID_UBOOT=1
 
 BOOT_LABEL=boot
 PARTITION_PREFIX=""
+
+MIRROR="http://rcn-ee.net/deb/"
 
 DIR=$PWD
 TEMPDIR=$(mktemp -d)
@@ -96,11 +96,10 @@ fi
 
 }
 
-function dl_xload_uboot {
-
+function dl_bootloader {
  echo ""
- echo "Downloading X-loader and Uboot"
- echo ""
+ echo "Downloading Device's Bootloader"
+ echo "-----------------------------"
 
  mkdir ${TEMPDIR}/dl
 
@@ -369,7 +368,7 @@ fi
 
  find_issue
  detect_software
- dl_xload_uboot
+ dl_bootloader
 
  unmount_all_drive_partitions
  create_partitions
