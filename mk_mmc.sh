@@ -23,8 +23,10 @@
 #Notes: need to check for: parted, fdisk, wget, mkfs.*, mkimage, md5sum
 
 unset MMC
-unset BETA
+unset USE_BETA_BOOTLOADER
 unset BOOTLOADER
+
+GIT_VERSION=$(git rev-parse --short HEAD)
 IN_VALID_UBOOT=1
 
 BOOT_LABEL=boot
@@ -32,7 +34,7 @@ PARTITION_PREFIX=""
 
 MIRROR="http://rcn-ee.net/deb/"
 
-DIR=$PWD
+DIR="$PWD"
 TEMPDIR=$(mktemp -d)
 
 function check_root {
@@ -105,7 +107,7 @@ function dl_bootloader {
 
  wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}tools/latest/bootloader
 
- if [ "$BETA" ];then
+ if [ "$USE_BETA_BOOTLOADER" ];then
   ABI="ABX2"
  else
   ABI="ABI2"
@@ -291,26 +293,26 @@ esac
 }
 
 function usage {
-    echo "usage: $(basename $0) --mmc /dev/sdX --uboot <dev board>"
+    echo "usage: sudo $(basename $0) --mmc /dev/sdX --uboot <dev board>"
 cat <<EOF
 
-Script Version $SCRIPT_VERSION
+Script Version git: ${GIT_VERSION}
+-----------------------------
 Bugs email: "bugs at rcn-ee.com"
 
 Required Options:
 --mmc </dev/sdX>
-    Unformated MMC Card
 
-Additional/Optional options:
+--uboot <dev board>
+    beagle_bx - <BeagleBoard Ax/Bx>
+    beagle_cx - <BeagleBoard Cx>
+
+Additional Options:
 -h --help
     this help
 
 --probe-mmc
-    List all partitions
-
---uboot <dev board>
-    beagle_bx - <Ax/Bx Models>
-    beagle_cx - <Cx Models>
+    List all partitions: sudo ./mk_mmc.sh --probe-mmc
 
 EOF
 exit
@@ -322,6 +324,8 @@ function checkparm {
         usage
     fi
 }
+
+IN_VALID_UBOOT=1
 
 # parse commandline options
 while [ ! -z "$1" ]; do
@@ -350,8 +354,8 @@ while [ ! -z "$1" ]; do
             UBOOT_TYPE="$2"
             check_uboot_type
             ;;
-        --beta)
-            BETA=1
+        --use-beta-bootloader)
+            USE_BETA_BOOTLOADER=1
             ;;
     esac
     shift
@@ -366,6 +370,10 @@ if [ "$IN_VALID_UBOOT" ] ; then
     echo "ERROR: --uboot undefined"
     usage
 fi
+
+ echo ""
+ echo "Script Version git: ${GIT_VERSION}"
+ echo "-----------------------------"
 
  find_issue
  detect_software
