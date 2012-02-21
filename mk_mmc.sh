@@ -285,11 +285,20 @@ case "$UBOOT_TYPE" in
  DO_UBOOT=1
 
         ;;
-esac
-
- if [ "$IN_VALID_UBOOT" ] ; then
-   usage
- fi
+	*)
+		cat <<-__EOF__
+			-----------------------------
+			ERROR: This script does not currently recognize the selected: [--uboot ${UBOOT_TYPE}] option..
+			Please rerun $(basename $0) with a valid [--uboot <device>] option from the list below:
+			-----------------------------
+			-Supported TI Devices:-------
+			beagle_bx - <BeagleBoard Ax/Bx>
+			beagle_cx - <BeagleBoard Cx>
+			-----------------------------
+		__EOF__
+		exit
+		;;
+	esac
 }
 
 function usage {
