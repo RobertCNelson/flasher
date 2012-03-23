@@ -32,7 +32,9 @@ IN_VALID_UBOOT=1
 BOOT_LABEL=boot
 PARTITION_PREFIX=""
 
-MIRROR="http://rcn-ee.net/deb/"
+MIRROR="http://rcn-ee.net/deb"
+BACKUP_MIRROR="http://rcn-ee.homeip.net:81/dl/mirrors/deb"
+unset RCNEEDOWN
 
 DIR="$PWD"
 TEMPDIR=$(mktemp -d)
@@ -89,6 +91,13 @@ function detect_software {
 	fi
 }
 
+function rcn-ee_down_use_mirror {
+	echo "rcn-ee.net down, switching to slower backup mirror"
+	echo "-----------------------------"
+	MIRROR=${BACKUP_MIRROR}
+	RCNEEDOWN=1
+}
+
 function dl_bootloader {
  echo ""
  echo "Downloading Device's Bootloader"
@@ -96,7 +105,18 @@ function dl_bootloader {
 
  mkdir ${TEMPDIR}/dl
 
- wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}tools/latest/bootloader
+	echo "attempting to use rcn-ee.net for dl files [10 second time out]..."
+	wget -T 10 -t 1 --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}/tools/latest/bootloader
+
+	if [ ! -f ${TEMPDIR}/dl/bootloader ] ; then
+		rcn-ee_down_use_mirror
+		wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}/tools/latest/bootloader
+	fi
+
+	if [ "$RCNEEDOWN" ];then
+		sed -i -e "s/rcn-ee.net/rcn-ee.homeip.net:81/g" ${TEMPDIR}/dl/bootloader
+		sed -i -e 's:81/deb/:81/dl/mirrors/deb/:g' ${TEMPDIR}/dl/bootloader
+	fi
 
  if [ "$USE_BETA_BOOTLOADER" ];then
   ABI="ABX2"
@@ -119,11 +139,13 @@ case "$SYSTEM" in
         ;;
 esac
 
- wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MLO}
- wget -c --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${UBOOT}
+	wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MLO}
+	MLO=${MLO##*/}
+	echo "SPL Bootloader: ${MLO}"
 
- MLO=${MLO##*/}
- UBOOT=${UBOOT##*/}
+	wget --directory-prefix=${TEMPDIR}/dl/ ${UBOOT}
+	UBOOT=${UBOOT##*/}
+	echo "UBOOT Bootloader: ${UBOOT}"
 }
 
 function unmount_all_drive_partitions {
