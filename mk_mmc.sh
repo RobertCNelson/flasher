@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 # Copyright (c) 2009-2012 Robert Nelson <robertcnelson@gmail.com>
 #
@@ -19,22 +19,21 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
-#Notes: need to check for: parted, fdisk, wget, mkfs.*, mkimage, md5sum
-
-unset MMC
-unset USE_BETA_BOOTLOADER
-unset BOOTLOADER
-
-GIT_VERSION=$(git rev-parse --short HEAD)
-IN_VALID_UBOOT=1
-
-BOOT_LABEL=boot
-PARTITION_PREFIX=""
+#
+# Latest can be found at:
+# http://github.com/RobertCNelson/flash-omap/blob/master/mk_mmc.sh
 
 MIRROR="http://rcn-ee.net/deb"
 BACKUP_MIRROR="http://rcn-ee.homeip.net:81/dl/mirrors/deb"
-unset RCNEEDOWN
+
+BOOT_LABEL="boot"
+PARTITION_PREFIX=""
+
+unset MMC
+unset USE_BETA_BOOTLOADER
+
+GIT_VERSION=$(git rev-parse --short HEAD)
+IN_VALID_UBOOT=1
 
 DIR="$PWD"
 TEMPDIR=$(mktemp -d)
@@ -105,6 +104,7 @@ function dl_bootloader {
 
  mkdir ${TEMPDIR}/dl
 
+	unset RCNEEDOWN
 	echo "attempting to use rcn-ee.net for dl files [10 second time out]..."
 	wget -T 10 -t 1 --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}/tools/latest/bootloader
 
@@ -278,26 +278,22 @@ function check_mmc {
 }
 
 function check_uboot_type {
- unset DO_UBOOT
+	unset DO_UBOOT
+	unset IN_VALID_UBOOT
 
-case "$UBOOT_TYPE" in
-    beagle_bx)
-
- SYSTEM=beagle_bx
- BOOTLOADER="BEAGLEBOARD_BX"
- unset IN_VALID_UBOOT
- DO_UBOOT=1
-
-        ;;
-    beagle_cx)
-
- SYSTEM=beagle_cx
- BOOTLOADER="BEAGLEBOARD_CX"
- unset IN_VALID_UBOOT
- DO_UBOOT=1
-
-        ;;
+	case "${UBOOT_TYPE}" in
+	beagle_bx)
+		SYSTEM="beagle_bx"
+		DO_UBOOT=1
+		BOOTLOADER="BEAGLEBOARD_BX"
+		;;
+	beagle_cx)
+		SYSTEM="beagle_cx"
+		DO_UBOOT=1
+		BOOTLOADER="BEAGLEBOARD_CX"
+		;;
 	*)
+		IN_VALID_UBOOT=1
 		cat <<-__EOF__
 			-----------------------------
 			ERROR: This script does not currently recognize the selected: [--uboot ${UBOOT_TYPE}] option..
@@ -382,14 +378,14 @@ while [ ! -z "$1" ]; do
     shift
 done
 
-if [ ! "${MMC}" ];then
-    echo "ERROR: --mmc undefined"
-    usage
+if [ ! "${MMC}" ] ; then
+	echo "ERROR: --mmc undefined"
+	usage
 fi
 
 if [ "$IN_VALID_UBOOT" ] ; then
-    echo "ERROR: --uboot undefined"
-    usage
+	echo "ERROR: --uboot undefined"
+	usage
 fi
 
  echo ""
