@@ -98,11 +98,11 @@ function rcn-ee_down_use_mirror {
 }
 
 function dl_bootloader {
- echo ""
- echo "Downloading Device's Bootloader"
- echo "-----------------------------"
+	echo ""
+	echo "Downloading Device's Bootloader"
+	echo "-----------------------------"
 
- mkdir ${TEMPDIR}/dl
+	mkdir ${TEMPDIR}/dl
 
 	unset RCNEEDOWN
 	echo "attempting to use rcn-ee.net for dl files [10 second time out]..."
@@ -118,26 +118,22 @@ function dl_bootloader {
 		sed -i -e 's:81/deb/:81/dl/mirrors/deb/:g' ${TEMPDIR}/dl/bootloader
 	fi
 
- if [ "$USE_BETA_BOOTLOADER" ];then
-  ABI="ABX2"
- else
-  ABI="ABI2"
- fi
+	if [ "$USE_BETA_BOOTLOADER" ];then
+		ABI="ABX2"
+	else
+		ABI="ABI2"
+	fi
 
-case "$SYSTEM" in
-    beagle_bx)
-
- MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:SPL" | awk '{print $2}')
- UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:BOOT" | awk '{print $2}')
-
-        ;;
-    beagle_cx)
-
- MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:SPL" | awk '{print $2}')
- UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:BOOT" | awk '{print $2}')
-
-        ;;
-esac
+	case "${SYSTEM}" in
+	beagle_bx)
+		MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:SPL" | awk '{print $2}')
+		UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:BOOT" | awk '{print $2}')
+		;;
+	beagle_cx)
+		MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:SPL" | awk '{print $2}')
+		UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:BOOT" | awk '{print $2}')
+		;;
+	esac
 
 	wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MLO}
 	MLO=${MLO##*/}
