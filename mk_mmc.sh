@@ -270,7 +270,6 @@ function check_mmc {
 		echo ""
 		exit
 	fi
- fi
 }
 
 function check_uboot_type {
