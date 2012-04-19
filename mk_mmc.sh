@@ -74,7 +74,6 @@ function check_for_command {
 function detect_software {
 	unset NEEDS_COMMAND
 
-	check_for_command mkimage uboot-mkimage
 	check_for_command mkfs.vfat dosfstools
 	check_for_command wget wget
 	check_for_command parted parted
@@ -82,9 +81,9 @@ function detect_software {
 	if [ "${NEEDS_COMMAND}" ] ; then
 		echo ""
 		echo "Your system is missing some dependencies"
-		echo "Ubuntu/Debian: sudo apt-get install uboot-mkimage wget dosfstools parted"
-		echo "Fedora: as root: yum install uboot-tools wget dosfstools parted dpkg patch"
-		echo "Gentoo: emerge u-boot-tools wget dosfstools parted dpkg"
+		echo "Ubuntu/Debian: sudo apt-get install wget dosfstools parted"
+		echo "Fedora: as root: yum install wget dosfstools parted dpkg patch"
+		echo "Gentoo: emerge wget dosfstools parted dpkg"
 		echo ""
 		exit
 	fi
@@ -208,8 +207,6 @@ function populate_boot {
 
  cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/u-boot.img
 
- mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d "${DIR}/reset.cmd" ${TEMPDIR}/disk/user.scr
- cat "${DIR}/reset.cmd"
  cp -v "${DIR}/uEnv.txt" ${TEMPDIR}/disk/user.txt
  cp -v "${DIR}/uEnv.txt" ${TEMPDIR}/disk/uEnv.txt
 
