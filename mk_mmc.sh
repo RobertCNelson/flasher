@@ -196,41 +196,41 @@ function create_partitions {
 }
 
 function populate_boot {
- echo "Populating Boot Partition"
- echo "-----------------------------"
+	echo "Populating Boot Partition"
+	echo "-----------------------------"
 
- mkdir -p ${TEMPDIR}/disk
+	mkdir -p ${TEMPDIR}/disk
 
- if mount -t vfat ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk; then
+	if mount -t vfat ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk; then
 
- cp -v ${TEMPDIR}/dl/${MLO} ${TEMPDIR}/disk/MLO
+		cp -v ${TEMPDIR}/dl/${MLO} ${TEMPDIR}/disk/MLO
 
- cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/u-boot.img
+		cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/u-boot.img
 
- cp -v "${DIR}/uEnv.txt" ${TEMPDIR}/disk/user.txt
- cp -v "${DIR}/uEnv.txt" ${TEMPDIR}/disk/uEnv.txt
+		cp -v "${DIR}/uEnv.txt" ${TEMPDIR}/disk/user.txt
+		cp -v "${DIR}/uEnv.txt" ${TEMPDIR}/disk/uEnv.txt
 
-cd ${TEMPDIR}/disk
-sync
-cd "${DIR}/"
+		cd ${TEMPDIR}/disk
+		sync
+		cd "${DIR}/"
 
- echo "Debug: Contents of Boot Partition"
- echo "-----------------------------"
- ls -lh ${TEMPDIR}/disk/
- echo "-----------------------------"
+		echo "Debug: Contents of Boot Partition"
+		echo "-----------------------------"
+		ls -lh ${TEMPDIR}/disk/
+		echo "-----------------------------"
 
-umount ${TEMPDIR}/disk || true
+		umount ${TEMPDIR}/disk || true
 
- echo "Finished populating Boot Partition"
- echo "-----------------------------"
-else
- echo "-----------------------------"
- echo "Unable to mount ${MMC}${PARTITION_PREFIX}1 at ${TEMPDIR}/disk to complete populating Boot Partition"
- echo "Please retry running the script, sometimes rebooting your system helps."
- echo "-----------------------------"
- exit
+		echo "Finished populating Boot Partition"
+		echo "-----------------------------"
+	else
+		echo "-----------------------------"
+		echo "Unable to mount ${MMC}${PARTITION_PREFIX}1 at ${TEMPDIR}/disk to complete populating Boot Partition"
+		echo "Please retry running the script, sometimes rebooting your system helps."
+		echo "-----------------------------"
+		exit
 fi
- echo "mk_mmc.sh script complete"
+	echo "mk_mmc.sh script complete"
 }
 
 function check_mmc {
