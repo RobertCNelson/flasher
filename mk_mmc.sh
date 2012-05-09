@@ -39,25 +39,10 @@ DIR="$PWD"
 TEMPDIR=$(mktemp -d)
 
 function check_root {
-if [[ $UID -ne 0 ]]; then
- echo "$0 must be run as sudo user or root"
- exit
-fi
-}
-
-function find_issue {
-
-check_root
-
-#Software Qwerks
-
-#Check for gnu-fdisk
-#FIXME: GNU Fdisk seems to halt at "Using /dev/xx" when trying to script it..
-if fdisk -v | grep "GNU Fdisk" >/dev/null ; then
- echo "Sorry, this script currently doesn't work with GNU Fdisk"
- exit
-fi
-
+	if [[ $UID -ne 0 ]]; then
+		echo "$0 must be run as sudo user or root"
+		exit
+	fi
 }
 
 function check_for_command {
@@ -87,6 +72,19 @@ function detect_software {
 		echo "Gentoo: emerge u-boot-tools wget dosfstools parted dpkg"
 		echo ""
 		exit
+	fi
+
+	#Check for gnu-fdisk
+	#FIXME: GNU Fdisk seems to halt at "Using /dev/xx" when trying to script it..
+	if fdisk -v | grep "GNU Fdisk" >/dev/null ; then
+		echo "Sorry, this script currently doesn't work with GNU Fdisk."
+		echo "Install the version of fdisk from your distribution's util-linux package."
+		exit
+	fi
+
+	unset PARTED_ALIGN
+	if parted -v | grep parted | grep 2.[1-3] >/dev/null ; then
+		PARTED_ALIGN="--align cylinder"
 	fi
 }
 
@@ -381,7 +379,7 @@ fi
  echo "Script Version git: ${GIT_VERSION}"
  echo "-----------------------------"
 
- find_issue
+ check_root
  detect_software
  dl_bootloader
 
