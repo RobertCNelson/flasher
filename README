@@ -1,8 +1,8 @@
 Compatible with Bx,C2/3/4
 Requires MMC card
 
-git://github.com/RobertCNelson/flash-omap.git
-cd omap-flasher
+git://github.com/RobertCNelson/flasher.git
+cd flasher
 ./mk_mmc.sh --mmc /dev/sdX
 
 1: Place MMC card in Beagle

@@ -21,7 +21,7 @@
 # THE SOFTWARE.
 #
 # Latest can be found at:
-# http://github.com/RobertCNelson/flash-omap/blob/master/mk_mmc.sh
+# http://github.com/RobertCNelson/flasher/blob/master/mk_mmc.sh
 
 MIRROR="http://rcn-ee.net/deb"
 BACKUP_MIRROR="http://rcn-ee.homeip.net:81/dl/mirrors/deb"
