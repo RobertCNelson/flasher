@@ -169,9 +169,9 @@ function unmount_all_drive_partitions {
 	LC_ALL=C parted --script ${MMC} mklabel msdos | grep "Error:" && drive_error_ro
 }
 
-function uboot_in_boot_partition {
+function omap_fatfs_boot_part {
 	echo ""
-	echo "Using fdisk to create BOOT Partition"
+	echo "Using fdisk to create an omap compatible fatfs BOOT partition"
 	echo "-----------------------------"
 
 	fdisk ${MMC} <<-__EOF__
@@ -193,6 +193,32 @@ function uboot_in_boot_partition {
 	parted --script ${MMC} set 1 boot on
 }
 
+function dd_to_drive {
+	echo ""
+	echo "Using dd to place bootloader on drive"
+	echo "-----------------------------"
+	dd if=${TEMPDIR}/dl/${UBOOT} of=${MMC} seek=1 bs=1024
+	bootloader_installed=1
+
+	echo "Using parted to create BOOT Partition"
+	echo "-----------------------------"
+	if [ "x${boot_fstype}" == "xfat" ] ; then
+		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary fat16 10 100
+	else
+		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary ext2 10 100
+	fi
+}
+
+function no_boot_on_drive {
+	echo "Using parted to create BOOT Partition"
+	echo "-----------------------------"
+	if [ "x${boot_fstype}" == "xfat" ] ; then
+		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary fat16 1 100
+	else
+		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary ext2 1 100
+	fi
+}
+
 function format_boot_partition {
 	echo "Formating Boot Partition"
 	echo "-----------------------------"
@@ -206,9 +232,19 @@ function format_boot_partition {
 }
 
 function create_partitions {
-
- uboot_in_boot_partition
- format_boot_partition
+	unset bootloader_installed
+	case "${bootloader_location}" in
+	omap_fatfs_boot_part)
+		omap_fatfs_boot_part
+		;;
+	dd_to_drive)
+		dd_to_drive
+		;;
+	*)
+		no_boot_on_drive
+		;;
+	esac
+	format_boot_partition
 }
 
 function populate_boot {
