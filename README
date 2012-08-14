@@ -1,13 +1,31 @@
-Compatible with Bx,C2/3/4
-Requires MMC card
-
 git://github.com/RobertCNelson/flasher.git
 cd flasher
-./mk_mmc.sh --mmc /dev/sdX
 
-1: Place MMC card in Beagle
-2: Push/Hold User Button Down
-3: Apply Power
-4: After U-boot loads, Let Off User Button
-5: Wait for Flashing to end
-6: Power down, remove/edit boot.scr from MMC card
+Required Options:
+--mmc </dev/sdX>
+
+--uboot <dev board>
+        TI:
+                beagle_bx - <BeagleBoard Ax/Bx>
+                beagle_cx - <BeagleBoard Cx>
+        Freescale:
+                mx6q_sabrelite - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
+
+Additional Options:
+        -h --help
+
+--probe-mmc
+        <list all partitions: sudo ./mk_mmc.sh --probe-mmc>
+
+beagle_bx - <BeagleBoard Ax/Bx>
+beagle_cx - <BeagleBoard Cx>
+	1: Place MMC card in Beagle
+	2: Push/Hold User Button Down
+	3: Apply Power
+	4: After U-boot loads, Let Off User Button
+	5: Wait for Flashing to end
+	6: Power down, remove/edit boot.scr from MMC card
+
+mx6q_sabrelite - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
+	1: Plugin Card and Boot.
+

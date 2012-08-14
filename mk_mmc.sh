@@ -263,7 +263,7 @@ function populate_boot {
 			fi
 		fi
 
-		if [ "${boot_name}" ] && [ ! "${IS_IMX}" ] ; then
+		if [ "${boot_name}" ] ; then
 			if [ -f ${TEMPDIR}/dl/${UBOOT} ]; then
 				cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/${boot_name}
 			fi
@@ -302,6 +302,44 @@ function populate_boot {
 			__EOF__
 
 			cp -v ${TEMPDIR}/disk/uEnv.txt ${TEMPDIR}/disk/user.txt
+			;;
+		mx6q_sabrelite)
+			cat > ${TEMPDIR}/disk/reset.cmd <<-__EOF__
+				echo "check U-Boot" ;
+				if ext2load mmc \${disk}:1 12000000 u-boot.imx ; then
+					echo "read \${filesize} bytes from SD card" ;
+					if sf probe 1 27000000 ; then
+						echo "probed SPI ROM" ;
+						if sf read 0x12400000 0 \${filesize} ; then
+							if cmp.b 0x12000000 0x12400000 \${filesize} ; then
+								echo "------- U-Boot versions match" ;
+							else
+								echo "Need U-Boot upgrade" ;
+								echo "Program in 10 seconds" ;
+								for n in 9 8 7 6 5 4 3 2 1 0 ; do
+									echo \${n} ;
+									sleep 1 ;
+								done
+								echo "erasing" ;
+								sf erase 0 0x40000 ;
+								echo "programming" ;
+								sf write 0x12000000 0x400 \${filesize} ;
+							fi
+						else
+							echo "Error reading boot loader from EEPROM" ;
+						fi
+					else
+						echo "Error initializing EEPROM" ;
+					fi ;
+				else
+					echo "No U-Boot image found on SD card" ;
+				fi
+
+			__EOF__
+
+			mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${TEMPDIR}/disk/reset.cmd ${TEMPDIR}/disk/6q_bootscript
+
+			sudo cp -v ${TEMPDIR}/disk/6q_bootscript ${TEMPDIR}/disk/boot.scr
 			;;
 		esac
 
@@ -367,6 +405,16 @@ function is_omap {
 	boot_fstype="fat"
 }
 
+function is_imx {
+	IS_IMX=1
+
+	bootloader_location="dd_to_drive"
+	unset spl_name
+	boot_name="u-boot.imx"
+
+	boot_fstype="fat"
+}
+
 function check_uboot_type {
 	unset DO_UBOOT
 	unset IN_VALID_UBOOT
@@ -384,6 +432,13 @@ function check_uboot_type {
 		BOOTLOADER="BEAGLEBOARD_CX"
 		is_omap
 		;;
+	mx6q_sabrelite)
+		SYSTEM="mx6q_sabrelite"
+		BOOTLOADER="MX6Q_SABRELITE_D"
+		is_imx
+		unset bootloader_location
+		boot_fstype="ext2"
+		;;
 	*)
 		IN_VALID_UBOOT=1
 		cat <<-__EOF__
@@ -394,6 +449,8 @@ function check_uboot_type {
 			        TI:
 			                beagle_bx - <BeagleBoard Ax/Bx>
 			                beagle_cx - <BeagleBoard Cx>
+			        Freescale:
+			                mx6q_sabrelite - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
 			-----------------------------
 		__EOF__
 		exit
@@ -416,6 +473,8 @@ function usage {
 			        TI:
 			                beagle_bx - <BeagleBoard Ax/Bx>
 			                beagle_cx - <BeagleBoard Cx>
+			        Freescale:
+			                mx6q_sabrelite - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
 
 			Additional Options:
 			        -h --help
@@ -486,7 +545,10 @@ fi
 
  check_root
  detect_software
- dl_bootloader
+
+if [ "${spl_name}" ] || [ "${boot_name}" ]; then
+	dl_bootloader
+fi
 
  unmount_all_drive_partitions
  create_partitions
