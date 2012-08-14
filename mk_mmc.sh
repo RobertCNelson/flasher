@@ -194,9 +194,15 @@ function uboot_in_boot_partition {
 }
 
 function format_boot_partition {
- echo "Formating Boot Partition"
- echo "-----------------------------"
- mkfs.vfat -F 16 ${MMC}${PARTITION_PREFIX}1 -n ${BOOT_LABEL}
+	echo "Formating Boot Partition"
+	echo "-----------------------------"
+	if [ "x${boot_fstype}" == "xfat" ] ; then
+		boot_part_format="vfat"
+		mkfs.vfat -F 16 ${MMC}${PARTITION_PREFIX}1 -n ${BOOT_LABEL}
+	else
+		boot_part_format="ext2"
+		mkfs.ext2 ${MMC}${PARTITION_PREFIX}1 -L ${BOOT_LABEL}
+	fi
 }
 
 function create_partitions {
@@ -213,7 +219,7 @@ function populate_boot {
 		mkdir -p ${TEMPDIR}/disk
 	fi
 
-	if mount -t vfat ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk; then
+	if mount -t ${boot_part_format} ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk; then
 
 		cp -v ${TEMPDIR}/dl/${MLO} ${TEMPDIR}/disk/MLO
 
@@ -283,6 +289,8 @@ function is_omap {
 	bootloader_location="omap_fatfs_boot_part"
 	spl_name="MLO"
 	boot_name="u-boot.img"
+
+	boot_fstype="fat"
 }
 
 function check_uboot_type {
