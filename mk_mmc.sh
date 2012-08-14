@@ -122,24 +122,23 @@ function dl_bootloader {
 		ABI="ABI2"
 	fi
 
-	case "${SYSTEM}" in
-	beagle_bx)
+	if [ "${spl_name}" ] ; then
 		MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:SPL" | awk '{print $2}')
-		UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:BOOT" | awk '{print $2}')
-		;;
-	beagle_cx)
-		MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:SPL" | awk '{print $2}')
-		UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:BOOT" | awk '{print $2}')
-		;;
-	esac
+		wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MLO}
+		MLO=${MLO##*/}
+		echo "SPL Bootloader: ${MLO}"
+	else
+		unset MLO
+	fi
 
-	wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MLO}
-	MLO=${MLO##*/}
-	echo "SPL Bootloader: ${MLO}"
-
-	wget --directory-prefix=${TEMPDIR}/dl/ ${UBOOT}
-	UBOOT=${UBOOT##*/}
-	echo "UBOOT Bootloader: ${UBOOT}"
+	if [ "${boot_name}" ] ; then
+		UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:BOOT" | awk '{print $2}')
+		wget --directory-prefix=${TEMPDIR}/dl/ ${UBOOT}
+		UBOOT=${UBOOT##*/}
+		echo "UBOOT Bootloader: ${UBOOT}"
+	else
+		unset UBOOT
+	fi
 }
 
 function drive_error_ro {
@@ -257,9 +256,18 @@ function populate_boot {
 
 	if mount -t ${boot_part_format} ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk; then
 
-		cp -v ${TEMPDIR}/dl/${MLO} ${TEMPDIR}/disk/MLO
+		if [ "${spl_name}" ] ; then
+			if [ -f ${TEMPDIR}/dl/${MLO} ]; then
+				cp -v ${TEMPDIR}/dl/${MLO} ${TEMPDIR}/disk/${spl_name}
+				echo "-----------------------------"
+			fi
+		fi
 
-		cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/u-boot.img
+		if [ "${boot_name}" ] && [ ! "${IS_IMX}" ] ; then
+			if [ -f ${TEMPDIR}/dl/${UBOOT} ]; then
+				cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/${boot_name}
+			fi
+		fi
 
 		mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d "${DIR}/reset.cmd" ${TEMPDIR}/disk/user.scr
 		cat "${DIR}/reset.cmd"
