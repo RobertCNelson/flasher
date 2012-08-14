@@ -269,11 +269,41 @@ function populate_boot {
 			fi
 		fi
 
-		mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d "${DIR}/reset.cmd" ${TEMPDIR}/disk/user.scr
-		cat "${DIR}/reset.cmd"
+		case "${SYSTEM}" in
+		beagle_bx|beagle_cx)
+			cat > ${TEMPDIR}/disk/reset.cmd <<-__EOF__
+				echo "Starting NAND UPGRADE, do not REMOVE SD CARD or POWER till Complete"
+				fatload mmc 0:1 0x80200000 MLO
+				nandecc hw
+				nand erase 0 80000
+				nand write 0x80200000 0 20000
+				nand write 0x80200000 20000 20000
+				nand write 0x80200000 40000 20000
+				nand write 0x80200000 60000 20000
 
-		cp -v "${DIR}/uEnv.txt" ${TEMPDIR}/disk/user.txt
-		cp -v "${DIR}/uEnv.txt" ${TEMPDIR}/disk/uEnv.txt
+				fatload mmc 0:1 0x80200000 u-boot.img
+				nandecc hw
+				nand erase 80000 160000
+				nand write 0x80200000 80000 170000
+				nand erase 260000 20000
+				echo "FLASH UPGRADE Complete"
+				exit
+
+			__EOF__
+
+			mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${TEMPDIR}/disk/reset.cmd ${TEMPDIR}/disk/user.scr
+			cat ${TEMPDIR}/disk/reset.cmd
+
+			cat > ${TEMPDIR}/disk/uEnv.txt <<-__EOF__
+				bootenv=user.scr
+				loaduimage=fatload mmc \${mmcdev} \${loadaddr} \${bootenv}
+				mmcboot=echo Running user.scr script from mmc ...; source \${loadaddr}
+
+			__EOF__
+
+			cp -v ${TEMPDIR}/disk/uEnv.txt ${TEMPDIR}/disk/user.txt
+			;;
+		esac
 
 		cd ${TEMPDIR}/disk
 		sync

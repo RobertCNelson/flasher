@@ -1,3 +1,0 @@
-bootenv=user.scr
-loaduimage=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}
-mmcboot=echo Running user.scr script from mmc ...; source ${loadaddr}
