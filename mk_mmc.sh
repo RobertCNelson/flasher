@@ -100,7 +100,7 @@ function dl_bootloader {
 	echo "Downloading Device's Bootloader"
 	echo "-----------------------------"
 
-	mkdir ${TEMPDIR}/dl
+	mkdir -p ${TEMPDIR}/dl
 
 	unset RCNEEDOWN
 	echo "attempting to use rcn-ee.net for dl files [10 second time out]..."
@@ -116,7 +116,7 @@ function dl_bootloader {
 		sed -i -e 's:81/deb/:81/dl/mirrors/deb/:g' ${TEMPDIR}/dl/bootloader
 	fi
 
-	if [ "$USE_BETA_BOOTLOADER" ];then
+	if [ "${USE_BETA_BOOTLOADER}" ] ; then
 		ABI="ABX2"
 	else
 		ABI="ABI2"
@@ -277,6 +277,14 @@ function check_mmc {
 	fi
 }
 
+function is_omap {
+	IS_OMAP=1
+
+	bootloader_location="omap_fatfs_boot_part"
+	spl_name="MLO"
+	boot_name="u-boot.img"
+}
+
 function check_uboot_type {
 	unset DO_UBOOT
 	unset IN_VALID_UBOOT
@@ -286,11 +294,13 @@ function check_uboot_type {
 		SYSTEM="beagle_bx"
 		DO_UBOOT=1
 		BOOTLOADER="BEAGLEBOARD_BX"
+		is_omap
 		;;
 	beagle_cx)
 		SYSTEM="beagle_cx"
 		DO_UBOOT=1
 		BOOTLOADER="BEAGLEBOARD_CX"
+		is_omap
 		;;
 	*)
 		IN_VALID_UBOOT=1
@@ -299,9 +309,9 @@ function check_uboot_type {
 			ERROR: This script does not currently recognize the selected: [--uboot ${UBOOT_TYPE}] option..
 			Please rerun $(basename $0) with a valid [--uboot <device>] option from the list below:
 			-----------------------------
-			-Supported TI Devices:-------
-			beagle_bx - <BeagleBoard Ax/Bx>
-			beagle_cx - <BeagleBoard Cx>
+			        TI:
+			                beagle_bx - <BeagleBoard Ax/Bx>
+			                beagle_cx - <BeagleBoard Cx>
 			-----------------------------
 		__EOF__
 		exit
@@ -310,29 +320,29 @@ function check_uboot_type {
 }
 
 function usage {
-    echo "usage: sudo $(basename $0) --mmc /dev/sdX --uboot <dev board>"
-cat <<EOF
+	echo "usage: sudo $(basename $0) --mmc /dev/sdX --uboot <dev board>"
+	#tabed to match 
+		cat <<-__EOF__
+			Script Version git: ${GIT_VERSION}
+			-----------------------------
+			Bugs email: "bugs at rcn-ee.com"
 
-Script Version git: ${GIT_VERSION}
------------------------------
-Bugs email: "bugs at rcn-ee.com"
+			Required Options:
+			--mmc </dev/sdX>
 
-Required Options:
---mmc </dev/sdX>
+			--uboot <dev board>
+			        TI:
+			                beagle_bx - <BeagleBoard Ax/Bx>
+			                beagle_cx - <BeagleBoard Cx>
 
---uboot <dev board>
-    beagle_bx - <BeagleBoard Ax/Bx>
-    beagle_cx - <BeagleBoard Cx>
+			Additional Options:
+			        -h --help
 
-Additional Options:
--h --help
-    this help
+			--probe-mmc
+			        <list all partitions: sudo ./mk_mmc.sh --probe-mmc>
 
---probe-mmc
-    List all partitions: sudo ./mk_mmc.sh --probe-mmc
-
-EOF
-exit
+			__EOF__
+	exit
 }
 
 function checkparm {
