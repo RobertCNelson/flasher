@@ -303,7 +303,7 @@ function populate_boot {
 
 			cp -v ${TEMPDIR}/disk/uEnv.txt ${TEMPDIR}/disk/user.txt
 			;;
-		mx6q_sabrelite)
+		mx6qsabrelite)
 			cat > ${TEMPDIR}/disk/reset.cmd <<-__EOF__
 				echo "check U-Boot" ;
 				if ext2load mmc \${disk}:1 12000000 u-boot.imx ; then
@@ -432,9 +432,9 @@ function check_uboot_type {
 		BOOTLOADER="BEAGLEBOARD_CX"
 		is_omap
 		;;
-	mx6q_sabrelite)
-		SYSTEM="mx6q_sabrelite"
-		BOOTLOADER="MX6Q_SABRELITE_D"
+	mx6qsabrelite)
+		SYSTEM="mx6qsabrelite"
+		BOOTLOADER="MX6QSABRELITE_D"
 		is_imx
 		unset bootloader_location
 		boot_fstype="ext2"
@@ -474,7 +474,7 @@ function usage {
 			                beagle_bx - <BeagleBoard Ax/Bx>
 			                beagle_cx - <BeagleBoard Cx>
 			        Freescale:
-			                mx6q_sabrelite - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
+			                mx6qsabrelite - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
 
 			Additional Options:
 			        -h --help

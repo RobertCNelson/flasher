@@ -11,7 +11,7 @@ Required Options:
                 beagle_bx - <BeagleBoard Ax/Bx>
                 beagle_cx - <BeagleBoard Cx>
         Freescale:
-                mx6q_sabrelite - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
+                mx6qsabrelite - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
 
 Additional Options:
         -h --help
