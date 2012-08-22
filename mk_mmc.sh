@@ -273,7 +273,7 @@ function populate_boot {
 		beagle_bx|beagle_cx)
 			cat > ${TEMPDIR}/disk/reset.cmd <<-__EOF__
 				echo "Starting NAND UPGRADE, do not REMOVE SD CARD or POWER till Complete"
-				fatload mmc 0:1 0x80200000 MLO
+				fatload mmc 0:1 0x80200000 ${spl_name}
 				nandecc hw
 				nand erase 0 80000
 				nand write 0x80200000 0 20000
@@ -281,7 +281,7 @@ function populate_boot {
 				nand write 0x80200000 40000 20000
 				nand write 0x80200000 60000 20000
 
-				fatload mmc 0:1 0x80200000 u-boot.img
+				fatload mmc 0:1 0x80200000 ${boot_name}
 				nandecc hw
 				nand erase 80000 160000
 				nand write 0x80200000 80000 170000
@@ -306,7 +306,7 @@ function populate_boot {
 		mx6qsabrelite)
 			cat > ${TEMPDIR}/disk/reset.cmd <<-__EOF__
 				echo "check U-Boot" ;
-				if ext2load mmc \${disk}:1 12000000 u-boot.imx ; then
+				if ext2load mmc \${disk}:1 12000000 ${boot_name} ; then
 					echo "read \${filesize} bytes from SD card" ;
 					if sf probe 1 27000000 ; then
 						echo "probed SPI ROM" ;
