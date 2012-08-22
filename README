@@ -1,5 +1,7 @@
-git://github.com/RobertCNelson/flasher.git
+git clone git://github.com/RobertCNelson/flasher.git
 cd flasher
+
+sudo ./mk_mmc.sh --mmc <mmc card> --uboot <board>
 
 Required Options:
 --mmc </dev/sdX>
