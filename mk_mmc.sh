@@ -314,12 +314,6 @@ function populate_boot {
 							if cmp.b 0x12000000 0x12400000 \${filesize} ; then
 								echo "------- U-Boot versions match" ;
 							else
-								echo "Need U-Boot upgrade" ;
-								echo "Program in 10 seconds" ;
-								for n in 9 8 7 6 5 4 3 2 1 0 ; do
-									echo \${n} ;
-									sleep 1 ;
-								done
 								echo "erasing" ;
 								sf erase 0 0x40000 ;
 								echo "programming" ;
@@ -337,9 +331,8 @@ function populate_boot {
 
 			__EOF__
 
-			mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${TEMPDIR}/disk/reset.cmd ${TEMPDIR}/disk/6q_bootscript
-
-			sudo cp -v ${TEMPDIR}/disk/6q_bootscript ${TEMPDIR}/disk/boot.scr
+			mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${TEMPDIR}/disk/reset.cmd ${TEMPDIR}/disk/boot.scr
+			sudo cp -v ${TEMPDIR}/disk/boot.scr ${TEMPDIR}/disk/6q_bootscript
 			;;
 		esac
 
