@@ -111,7 +111,7 @@ function dl_bootloader {
 		wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}/tools/latest/bootloader
 	fi
 
-	if [ "$RCNEEDOWN" ];then
+	if [ "${RCNEEDOWN}" ] ; then
 		sed -i -e "s/rcn-ee.net/rcn-ee.homeip.net:81/g" ${TEMPDIR}/dl/bootloader
 		sed -i -e 's:81/deb/:81/dl/mirrors/deb/:g' ${TEMPDIR}/dl/bootloader
 	fi
@@ -482,51 +482,50 @@ function usage {
 			--probe-mmc
 			        <list all partitions: sudo ./mk_mmc.sh --probe-mmc>
 
-			__EOF__
+		__EOF__
 	exit
 }
 
 function checkparm {
-    if [ "$(echo $1|grep ^'\-')" ];then
-        echo "E: Need an argument"
-        usage
-    fi
+	if [ "$(echo $1|grep ^'\-')" ] ; then
+		echo "E: Need an argument"
+		usage
+	fi
 }
 
 IN_VALID_UBOOT=1
 
 # parse commandline options
 while [ ! -z "$1" ]; do
-    case $1 in
-        -h|--help)
-            usage
-            MMC=1
-            ;;
-        --probe-mmc)
-            MMC="/dev/idontknow"
-            check_root
-            check_mmc
-            ;;
-        --mmc)
-            checkparm $2
-            MMC="$2"
-	    if [[ "${MMC}" =~ "mmcblk" ]]
-            then
-	        PARTITION_PREFIX="p"
-            fi
-            check_root
-            check_mmc
-            ;;
-        --uboot)
-            checkparm $2
-            UBOOT_TYPE="$2"
-            check_uboot_type
-            ;;
-        --use-beta-bootloader)
-            USE_BETA_BOOTLOADER=1
-            ;;
-    esac
-    shift
+	case $1 in
+	-h|--help)
+		usage
+		MMC=1
+		;;
+	--probe-mmc)
+		MMC="/dev/idontknow"
+		check_root
+		check_mmc
+	;;
+	--mmc)
+		checkparm $2
+		MMC="$2"
+		if [[ "${MMC}" =~ "mmcblk" ]] ; then
+			PARTITION_PREFIX="p"
+		fi
+		check_root
+		check_mmc
+		;;
+	--uboot)
+		checkparm $2
+		UBOOT_TYPE="$2"
+		check_uboot_type
+		;;
+	--use-beta-bootloader)
+		USE_BETA_BOOTLOADER=1
+		;;
+	esac
+	shift
 done
 
 if [ ! "${MMC}" ] ; then
@@ -534,23 +533,23 @@ if [ ! "${MMC}" ] ; then
 	usage
 fi
 
-if [ "$IN_VALID_UBOOT" ] ; then
+if [ "${IN_VALID_UBOOT}" ] ; then
 	echo "ERROR: --uboot undefined"
 	usage
 fi
 
- echo ""
- echo "Script Version git: ${GIT_VERSION}"
- echo "-----------------------------"
+echo ""
+echo "Script Version git: ${GIT_VERSION}"
+echo "-----------------------------"
 
- check_root
- detect_software
+check_root
+detect_software
 
-if [ "${spl_name}" ] || [ "${boot_name}" ]; then
+if [ "${spl_name}" ] || [ "${boot_name}" ] ; then
 	dl_bootloader
 fi
 
- unmount_all_drive_partitions
- create_partitions
- populate_boot
+unmount_all_drive_partitions
+create_partitions
+populate_boot
 

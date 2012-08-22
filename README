@@ -28,6 +28,6 @@ beagle_cx - <BeagleBoard Cx>
 	5: Wait for Flashing to end
 	6: Power down, remove/edit boot.scr from MMC card
 
-mx6q_sabrelite - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
+mx6qsabrelite* - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
 	1: Plugin Card and Boot.
 
