@@ -39,7 +39,7 @@ DIR="$PWD"
 TEMPDIR=$(mktemp -d)
 
 function check_root {
-	if [[ $UID -ne 0 ]]; then
+	if [[ ${UID} -ne 0 ]] ; then
 		echo "$0 must be run as sudo user or root"
 		exit
 	fi
@@ -196,15 +196,15 @@ function dd_to_drive {
 	echo ""
 	echo "Using dd to place bootloader on drive"
 	echo "-----------------------------"
-	dd if=${TEMPDIR}/dl/${UBOOT} of=${MMC} seek=1 bs=1024
+	dd if=${TEMPDIR}/dl/${UBOOT} of=${MMC} seek=${dd_seek} bs=${dd_bs}
 	bootloader_installed=1
 
 	echo "Using parted to create BOOT Partition"
 	echo "-----------------------------"
 	if [ "x${boot_fstype}" == "xfat" ] ; then
-		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary fat16 10 100
+		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary fat16 ${boot_startmb} 100
 	else
-		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary ext2 10 100
+		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary ext2 ${boot_startmb} 100
 	fi
 }
 
@@ -212,9 +212,9 @@ function no_boot_on_drive {
 	echo "Using parted to create BOOT Partition"
 	echo "-----------------------------"
 	if [ "x${boot_fstype}" == "xfat" ] ; then
-		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary fat16 1 100
+		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary fat16 ${boot_startmb} 100
 	else
-		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary ext2 1 100
+		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary ext2 ${boot_startmb} 100
 	fi
 }
 
@@ -369,7 +369,7 @@ function populate_boot {
 
 		cd ${TEMPDIR}/disk
 		sync
-		cd "${DIR}/"
+		cd "${DIR}"/
 
 		echo "Debug: Contents of Boot Partition"
 		echo "-----------------------------"
@@ -386,7 +386,7 @@ function populate_boot {
 		echo "Please retry running the script, sometimes rebooting your system helps."
 		echo "-----------------------------"
 		exit
-fi
+	fi
 	echo "mk_mmc.sh script complete"
 }
 
@@ -436,8 +436,11 @@ function is_imx {
 	unset spl_name
 	boot_name="u-boot.imx"
 	offset="0x400"
+	dd_seek="1"
+	dd_bs="1024"
+	boot_startmb="10"
 
-	boot_fstype="fat"
+	boot_fstype="ext2"
 }
 
 function check_uboot_type {
@@ -459,10 +462,11 @@ function check_uboot_type {
 		;;
 	mx6qsabrelite)
 		SYSTEM="mx6qsabrelite"
-		BOOTLOADER="MX6QSABRELITE_D"
+		BOOTLOADER="MX6QSABRELITE_D_SPI_RECOVERY"
 		is_imx
-		unset bootloader_location
-		boot_fstype="ext2"
+		dd_seek="2"
+		dd_bs="512"
+		boot_startmb="2"
 		;;
 	mx6qsabrelite_sd)
 		SYSTEM="mx6qsabrelite_sd"
@@ -471,7 +475,6 @@ function check_uboot_type {
 		boot_name="iMX6DQ_SPI_to_uSDHC3.bin"
 		offset="0x00"
 		unset bootloader_location
-		boot_fstype="ext2"
 		;;
 	*)
 		IN_VALID_UBOOT=1
