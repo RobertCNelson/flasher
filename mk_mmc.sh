@@ -317,7 +317,38 @@ function populate_boot {
 								echo "erasing" ;
 								sf erase 0 0x40000 ;
 								echo "programming" ;
-								sf write 0x12000000 0x400 \${filesize} ;
+								sf write 0x12000000 ${offset} \${filesize} ;
+							fi
+						else
+							echo "Error reading boot loader from EEPROM" ;
+						fi
+					else
+						echo "Error initializing EEPROM" ;
+					fi ;
+				else
+					echo "No U-Boot image found on SD card" ;
+				fi
+
+			__EOF__
+
+			mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${TEMPDIR}/disk/reset.cmd ${TEMPDIR}/disk/boot.scr
+			sudo cp -v ${TEMPDIR}/disk/boot.scr ${TEMPDIR}/disk/6q_bootscript
+			;;
+		mx6qsabrelite_sd)
+			cat > ${TEMPDIR}/disk/reset.cmd <<-__EOF__
+				echo "check U-Boot" ;
+				if ext2load mmc \${disk}:1 12000000 ${boot_name} ; then
+					echo "read \${filesize} bytes from SD card" ;
+					if sf probe 1 27000000 ; then
+						echo "probed SPI ROM" ;
+						if sf read 0x12400000 0 \${filesize} ; then
+							if cmp.b 0x12000000 0x12400000 \${filesize} ; then
+								echo "------- U-Boot versions match" ;
+							else
+								echo "erasing" ;
+								sf erase 0 0x40000 ;
+								echo "programming" ;
+								sf write 0x12000000 ${offset} \${filesize} ;
 							fi
 						else
 							echo "Error reading boot loader from EEPROM" ;
@@ -404,6 +435,7 @@ function is_imx {
 	bootloader_location="dd_to_drive"
 	unset spl_name
 	boot_name="u-boot.imx"
+	offset="0x400"
 
 	boot_fstype="fat"
 }
@@ -432,6 +464,15 @@ function check_uboot_type {
 		unset bootloader_location
 		boot_fstype="ext2"
 		;;
+	mx6qsabrelite_sd)
+		SYSTEM="mx6qsabrelite_sd"
+		BOOTLOADER="MX6QSABRELITE_D_SPI_TO_SD"
+		is_imx
+		boot_name="iMX6DQ_SPI_to_uSDHC3.bin"
+		offset="0x00"
+		unset bootloader_location
+		boot_fstype="ext2"
+		;;
 	*)
 		IN_VALID_UBOOT=1
 		cat <<-__EOF__
@@ -443,7 +484,8 @@ function check_uboot_type {
 			                beagle_bx - <BeagleBoard Ax/Bx>
 			                beagle_cx - <BeagleBoard Cx>
 			        Freescale:
-			                mx6q_sabrelite - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
+			                mx6qsabrelite - (boot off SPI)
+			                mx6qsabrelite_sd - (boot off SD)
 			-----------------------------
 		__EOF__
 		exit
@@ -467,7 +509,8 @@ function usage {
 			                beagle_bx - <BeagleBoard Ax/Bx>
 			                beagle_cx - <BeagleBoard Cx>
 			        Freescale:
-			                mx6qsabrelite - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
+			                mx6qsabrelite - (boot off SPI)
+			                mx6qsabrelite_sd - (boot off SD)
 
 			Additional Options:
 			        -h --help

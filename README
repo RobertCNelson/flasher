@@ -11,7 +11,8 @@ Required Options:
                 beagle_bx - <BeagleBoard Ax/Bx>
                 beagle_cx - <BeagleBoard Cx>
         Freescale:
-                mx6qsabrelite - <http://boundarydevices.com/products/sabre-lite-imx6-sbc/>
+                mx6qsabrelite - (boot off SPI)
+                mx6qsabrelite_sd - (boot off SD)
 
 Additional Options:
         -h --help
