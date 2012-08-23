@@ -468,6 +468,14 @@ function check_uboot_type {
 		dd_bs="512"
 		boot_startmb="2"
 		;;
+	mx6qsabrelite_uboot)
+		SYSTEM="mx6qsabrelite"
+		BOOTLOADER="MX6QSABRELITE_D"
+		is_imx
+		dd_seek="2"
+		dd_bs="512"
+		boot_startmb="2"
+		;;
 	mx6qsabrelite_sd)
 		SYSTEM="mx6qsabrelite_sd"
 		BOOTLOADER="MX6QSABRELITE_D_SPI_TO_SD"
@@ -489,6 +497,7 @@ function check_uboot_type {
 			        Freescale:
 			                mx6qsabrelite - (boot off SPI)
 			                mx6qsabrelite_sd - (boot off SD)
+			                mx6qsabrelite_uboot - (mainline testing DO NOT USE)
 			-----------------------------
 		__EOF__
 		exit
@@ -514,6 +523,7 @@ function usage {
 			        Freescale:
 			                mx6qsabrelite - (boot off SPI)
 			                mx6qsabrelite_sd - (boot off SD)
+			                mx6qsabrelite_uboot - (mainline testing DO NOT USE)
 
 			Additional Options:
 			        -h --help
