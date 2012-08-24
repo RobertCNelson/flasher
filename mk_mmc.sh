@@ -202,9 +202,9 @@ function dd_to_drive {
 	echo "Using parted to create BOOT Partition"
 	echo "-----------------------------"
 	if [ "x${boot_fstype}" == "xfat" ] ; then
-		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary fat16 ${boot_startmb} 100
+		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary fat16 ${boot_startmb} ${boot_endmb}
 	else
-		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary ext2 ${boot_startmb} 100
+		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary ext2 ${boot_startmb} ${boot_endmb}
 	fi
 }
 
@@ -212,9 +212,9 @@ function no_boot_on_drive {
 	echo "Using parted to create BOOT Partition"
 	echo "-----------------------------"
 	if [ "x${boot_fstype}" == "xfat" ] ; then
-		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary fat16 ${boot_startmb} 100
+		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary fat16 ${boot_startmb} ${boot_endmb}
 	else
-		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary ext2 ${boot_startmb} 100
+		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary ext2 ${boot_startmb} ${boot_endmb}
 	fi
 }
 
@@ -237,9 +237,11 @@ function create_partitions {
 		omap_fatfs_boot_part
 		;;
 	dd_to_drive)
+		let boot_endmb=${boot_startmb}+${boot_partition_size}
 		dd_to_drive
 		;;
 	*)
+		let boot_endmb=${boot_startmb}+${boot_partition_size}
 		no_boot_on_drive
 		;;
 	esac
@@ -257,14 +259,14 @@ function populate_boot {
 	if mount -t ${boot_part_format} ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk; then
 
 		if [ "${spl_name}" ] ; then
-			if [ -f ${TEMPDIR}/dl/${MLO} ]; then
+			if [ -f ${TEMPDIR}/dl/${MLO} ] ; then
 				cp -v ${TEMPDIR}/dl/${MLO} ${TEMPDIR}/disk/${spl_name}
 				echo "-----------------------------"
 			fi
 		fi
 
 		if [ "${boot_name}" ] ; then
-			if [ -f ${TEMPDIR}/dl/${UBOOT} ]; then
+			if [ -f ${TEMPDIR}/dl/${UBOOT} ] ; then
 				cp -v ${TEMPDIR}/dl/${UBOOT} ${TEMPDIR}/disk/${boot_name}
 			fi
 		fi
@@ -388,6 +390,8 @@ function populate_boot {
 		exit
 	fi
 	echo "mk_mmc.sh script complete"
+	echo "Script Version git: ${GIT_VERSION}"
+	echo "-----------------------------"
 }
 
 function check_mmc {
@@ -438,7 +442,7 @@ function is_imx {
 	offset="0x400"
 	dd_seek="1"
 	dd_bs="1024"
-	boot_startmb="10"
+	boot_startmb="2"
 
 	boot_fstype="ext2"
 }
@@ -446,6 +450,7 @@ function is_imx {
 function check_uboot_type {
 	unset DO_UBOOT
 	unset IN_VALID_UBOOT
+	boot_partition_size="50"
 
 	case "${UBOOT_TYPE}" in
 	beagle_bx)
@@ -466,7 +471,6 @@ function check_uboot_type {
 		is_imx
 		dd_seek="2"
 		dd_bs="512"
-		boot_startmb="2"
 		;;
 	mx6qsabrelite_uboot)
 		SYSTEM="mx6qsabrelite"
@@ -474,7 +478,6 @@ function check_uboot_type {
 		is_imx
 		dd_seek="2"
 		dd_bs="512"
-		boot_startmb="2"
 		;;
 	mx6qsabrelite_sd)
 		SYSTEM="mx6qsabrelite_sd"
@@ -531,7 +534,7 @@ function usage {
 			--probe-mmc
 			        <list all partitions: sudo ./mk_mmc.sh --probe-mmc>
 
-		__EOF__
+			__EOF__
 	exit
 }
 
@@ -545,7 +548,7 @@ function checkparm {
 IN_VALID_UBOOT=1
 
 # parse commandline options
-while [ ! -z "$1" ]; do
+while [ ! -z "$1" ] ; do
 	case $1 in
 	-h|--help)
 		usage
@@ -555,7 +558,7 @@ while [ ! -z "$1" ]; do
 		MMC="/dev/idontknow"
 		check_root
 		check_mmc
-	;;
+		;;
 	--mmc)
 		checkparm $2
 		MMC="$2"
