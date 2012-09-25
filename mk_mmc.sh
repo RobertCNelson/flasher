@@ -104,16 +104,16 @@ function dl_bootloader {
 
 	unset RCNEEDOWN
 	echo "attempting to use rcn-ee.net for dl files [10 second time out]..."
-	wget -T 10 -t 1 --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}/tools/latest/bootloader
+	wget -T 10 -t 1 --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}/tools/latest/bootloader-ng
 
-	if [ ! -f ${TEMPDIR}/dl/bootloader ] ; then
+	if [ ! -f ${TEMPDIR}/dl/bootloader-ng ] ; then
 		rcn-ee_down_use_mirror
-		wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}/tools/latest/bootloader
+		wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}/tools/latest/bootloader-ng
 	fi
 
 	if [ "${RCNEEDOWN}" ] ; then
-		sed -i -e "s/rcn-ee.net/rcn-ee.homeip.net:81/g" ${TEMPDIR}/dl/bootloader
-		sed -i -e 's:81/deb/:81/dl/mirrors/deb/:g' ${TEMPDIR}/dl/bootloader
+		sed -i -e "s/rcn-ee.net/rcn-ee.homeip.net:81/g" ${TEMPDIR}/dl/bootloader-ng
+		sed -i -e 's:81/deb/:81/dl/mirrors/deb/:g' ${TEMPDIR}/dl/bootloader-ng
 	fi
 
 	if [ "${USE_BETA_BOOTLOADER}" ] ; then
@@ -123,7 +123,7 @@ function dl_bootloader {
 	fi
 
 	if [ "${spl_name}" ] ; then
-		MLO=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:SPL" | awk '{print $2}')
+		MLO=$(cat ${TEMPDIR}/dl/bootloader-ng | grep "${ABI}:${BOOTLOADER}:SPL" | awk '{print $2}')
 		wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MLO}
 		MLO=${MLO##*/}
 		echo "SPL Bootloader: ${MLO}"
@@ -132,7 +132,7 @@ function dl_bootloader {
 	fi
 
 	if [ "${boot_name}" ] ; then
-		UBOOT=$(cat ${TEMPDIR}/dl/bootloader | grep "${ABI}:${BOOTLOADER}:BOOT" | awk '{print $2}')
+		UBOOT=$(cat ${TEMPDIR}/dl/bootloader-ng | grep "${ABI}:${BOOTLOADER}:BOOT" | awk '{print $2}')
 		wget --directory-prefix=${TEMPDIR}/dl/ ${UBOOT}
 		UBOOT=${UBOOT##*/}
 		echo "UBOOT Bootloader: ${UBOOT}"
