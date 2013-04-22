@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/bash -e
 #
-# Copyright (c) 2009-2012 Robert Nelson <robertcnelson@gmail.com>
+# Copyright (c) 2009-2013 Robert Nelson <robertcnelson@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -38,14 +38,14 @@ IN_VALID_UBOOT=1
 DIR="$PWD"
 TEMPDIR=$(mktemp -d)
 
-function check_root {
-	if [[ ${UID} -ne 0 ]] ; then
+check_root () {
+	if ! [ $(id -u) = 0 ] ; then
 		echo "$0 must be run as sudo user or root"
-		exit
+		exit 1
 	fi
 }
 
-function check_for_command {
+check_for_command () {
 	if ! which "$1" > /dev/null ; then
 		echo -n "You're missing command $1"
 		NEEDS_COMMAND=1
@@ -56,7 +56,7 @@ function check_for_command {
 	fi
 }
 
-function detect_software {
+detect_software () {
 	unset NEEDS_COMMAND
 
 	check_for_command mkimage uboot-mkimage
@@ -88,32 +88,28 @@ function detect_software {
 	fi
 }
 
-function rcn-ee_down_use_mirror {
-	echo "rcn-ee.net down, switching to slower backup mirror"
-	echo "-----------------------------"
-	MIRROR=${BACKUP_MIRROR}
-	RCNEEDOWN=1
-}
-
-function dl_bootloader {
+dl_bootloader () {
 	echo ""
 	echo "Downloading Device's Bootloader"
 	echo "-----------------------------"
+	minimal_boot="1"
+	conf_bl_http="http://rcn-ee.net/deb/tools/latest"
+	conf_bl_listfile="bootloader-ng"
 
 	mkdir -p ${TEMPDIR}/dl
 
-	unset RCNEEDOWN
-	echo "attempting to use rcn-ee.net for dl files [10 second time out]..."
-	wget -T 10 -t 1 --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}/tools/latest/bootloader-ng
+	wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${conf_bl_http}/${conf_bl_listfile}
 
-	if [ ! -f ${TEMPDIR}/dl/bootloader-ng ] ; then
-		rcn-ee_down_use_mirror
-		wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MIRROR}/tools/latest/bootloader-ng
+	if [ ! -f ${TEMPDIR}/dl/${conf_bl_listfile} ] ; then
+		echo "error: can't connect to rcn-ee.net, retry in a few minutes..."
+		exit
 	fi
 
-	if [ "${RCNEEDOWN}" ] ; then
-		sed -i -e "s/rcn-ee.net/rcn-ee.homeip.net:81/g" ${TEMPDIR}/dl/bootloader-ng
-		sed -i -e 's:81/deb/:81/dl/mirrors/deb/:g' ${TEMPDIR}/dl/bootloader-ng
+	boot_version=$(cat ${TEMPDIR}/dl/${conf_bl_listfile} | grep "VERSION:" | awk -F":" '{print $2}')
+	if [ "x${boot_version}" != "x${minimal_boot}" ] ; then
+		echo "Error: This script is out of date and unsupported..."
+		echo "Please Visit: https://github.com/RobertCNelson to find updates..."
+		exit
 	fi
 
 	if [ "${USE_BETA_BOOTLOADER}" ] ; then
@@ -123,7 +119,7 @@ function dl_bootloader {
 	fi
 
 	if [ "${spl_name}" ] ; then
-		MLO=$(cat ${TEMPDIR}/dl/bootloader-ng | grep "${ABI}:${BOOTLOADER}:SPL" | awk '{print $2}')
+		MLO=$(cat ${TEMPDIR}/dl/${conf_bl_listfile} | grep "${ABI}:${conf_board}:SPL" | awk '{print $2}')
 		wget --no-verbose --directory-prefix=${TEMPDIR}/dl/ ${MLO}
 		MLO=${MLO##*/}
 		echo "SPL Bootloader: ${MLO}"
@@ -132,7 +128,7 @@ function dl_bootloader {
 	fi
 
 	if [ "${boot_name}" ] ; then
-		UBOOT=$(cat ${TEMPDIR}/dl/bootloader-ng | grep "${ABI}:${BOOTLOADER}:BOOT" | awk '{print $2}')
+		UBOOT=$(cat ${TEMPDIR}/dl/${conf_bl_listfile} | grep "${ABI}:${conf_board}:BOOT" | awk '{print $2}')
 		wget --directory-prefix=${TEMPDIR}/dl/ ${UBOOT}
 		UBOOT=${UBOOT##*/}
 		echo "UBOOT Bootloader: ${UBOOT}"
@@ -141,8 +137,9 @@ function dl_bootloader {
 	fi
 }
 
-function drive_error_ro {
+drive_error_ro () {
 	echo "-----------------------------"
+	echo "Error: [LC_ALL=C parted --script ${MMC} mklabel msdos] failed..."
 	echo "Error: for some reason your SD card is not writable..."
 	echo "Check: is the write protect lever set the locked position?"
 	echo "Check: do you have another SD card reader?"
@@ -152,7 +149,7 @@ function drive_error_ro {
 	exit
 }
 
-function unmount_all_drive_partitions {
+unmount_all_drive_partitions () {
 	echo ""
 	echo "Unmounting Partitions"
 	echo "-----------------------------"
@@ -162,13 +159,21 @@ function unmount_all_drive_partitions {
 	for (( c=1; c<=$NUM_MOUNTS; c++ ))
 	do
 		DRIVE=$(mount | grep -v none | grep "$MMC" | tail -1 | awk '{print $1}')
-		umount ${DRIVE} &> /dev/null || true
+		umount ${DRIVE} >/dev/null 2>&1 || true
 	done
 
-	LC_ALL=C parted --script ${MMC} mklabel msdos | grep "Error:" && drive_error_ro
+	echo "Zeroing out Partition Table"
+	dd if=/dev/zero of=${MMC} bs=1024 count=1024
+	LC_ALL=C parted --script ${MMC} mklabel msdos || drive_error_ro
+	sync
 }
 
-function omap_fatfs_boot_part {
+fatfs_boot_error () {
+	echo "Failure: [parted --script ${MMC} set 1 boot on]"
+	exit
+}
+
+omap_fatfs_boot_part () {
 	echo ""
 	echo "Using fdisk to create an omap compatible fatfs BOOT partition"
 	echo "-----------------------------"
@@ -189,10 +194,10 @@ function omap_fatfs_boot_part {
 
 	echo "Setting Boot Partition's Boot Flag"
 	echo "-----------------------------"
-	parted --script ${MMC} set 1 boot on
+	LC_ALL=C parted --script ${MMC} set 1 boot on || fatfs_boot_error
 }
 
-function dd_to_drive {
+dd_to_drive () {
 	echo ""
 	echo "Using dd to place bootloader on drive"
 	echo "-----------------------------"
@@ -201,27 +206,27 @@ function dd_to_drive {
 
 	echo "Using parted to create BOOT Partition"
 	echo "-----------------------------"
-	if [ "x${boot_fstype}" == "xfat" ] ; then
+	if [ "x${boot_fstype}" = "xfat" ] ; then
 		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary fat16 ${boot_startmb} ${boot_endmb}
 	else
 		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary ext2 ${boot_startmb} ${boot_endmb}
 	fi
 }
 
-function no_boot_on_drive {
+no_boot_on_drive () {
 	echo "Using parted to create BOOT Partition"
 	echo "-----------------------------"
-	if [ "x${boot_fstype}" == "xfat" ] ; then
+	if [ "x${boot_fstype}" = "xfat" ] ; then
 		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary fat16 ${boot_startmb} ${boot_endmb}
 	else
 		parted --script ${PARTED_ALIGN} ${MMC} mkpart primary ext2 ${boot_startmb} ${boot_endmb}
 	fi
 }
 
-function format_boot_partition {
+format_boot_partition () {
 	echo "Formating Boot Partition"
 	echo "-----------------------------"
-	if [ "x${boot_fstype}" == "xfat" ] ; then
+	if [ "x${boot_fstype}" = "xfat" ] ; then
 		boot_part_format="vfat"
 		mkfs.vfat -F 16 ${MMC}${PARTITION_PREFIX}1 -n ${BOOT_LABEL}
 	else
@@ -230,7 +235,7 @@ function format_boot_partition {
 	fi
 }
 
-function create_partitions {
+create_partitions () {
 	unset bootloader_installed
 	case "${bootloader_location}" in
 	omap_fatfs_boot_part)
@@ -248,10 +253,11 @@ function create_partitions {
 	format_boot_partition
 }
 
-function populate_boot {
+populate_boot () {
 	echo "Populating Boot Partition"
 	echo "-----------------------------"
 
+	partprobe ${MMC}
 	if [ ! -d ${TEMPDIR}/disk ] ; then
 		mkdir -p ${TEMPDIR}/disk
 	fi
@@ -394,7 +400,7 @@ function populate_boot {
 	echo "-----------------------------"
 }
 
-function check_mmc {
+check_mmc () {
 	FDISK=$(LC_ALL=C fdisk -l 2>/dev/null | grep "Disk ${MMC}" | awk '{print $2}')
 
 	if [ "x${FDISK}" = "x${MMC}:" ] ; then
@@ -403,11 +409,20 @@ function check_mmc {
 		echo "fdisk -l:"
 		LC_ALL=C fdisk -l 2>/dev/null | grep "Disk /dev/" --color=never
 		echo ""
-		echo "mount:"
-		mount | grep -v none | grep "/dev/" --color=never
+		if which lsblk > /dev/null ; then
+			echo "lsblk:"
+			lsblk | grep -v sr0
+		else
+			echo "mount:"
+			mount | grep -v none | grep "/dev/" --color=never
+		fi
 		echo ""
-		read -p "Are you 100% sure, on selecting [${MMC}] (y/n)? "
-		[ "${REPLY}" == "y" ] || exit
+		unset response
+		echo -n "Are you 100% sure, on selecting [${MMC}] (y/n)? "
+		read response
+		if [ "x${response}" != "xy" ] ; then
+			exit
+		fi
 		echo ""
 	else
 		echo ""
@@ -423,7 +438,7 @@ function check_mmc {
 	fi
 }
 
-function is_omap {
+is_omap () {
 	IS_OMAP=1
 
 	bootloader_location="omap_fatfs_boot_part"
@@ -433,7 +448,7 @@ function is_omap {
 	boot_fstype="fat"
 }
 
-function is_imx {
+is_imx () {
 	IS_IMX=1
 
 	bootloader_location="dd_to_drive"
@@ -447,7 +462,7 @@ function is_imx {
 	boot_fstype="ext2"
 }
 
-function check_uboot_type {
+check_uboot_type () {
 	unset DO_UBOOT
 	unset IN_VALID_UBOOT
 	boot_partition_size="50"
@@ -456,32 +471,32 @@ function check_uboot_type {
 	beagle_bx)
 		SYSTEM="beagle_bx"
 		DO_UBOOT=1
-		BOOTLOADER="BEAGLEBOARD_BX"
+		conf_board="BEAGLEBOARD"
 		is_omap
 		;;
 	beagle_cx)
 		SYSTEM="beagle_cx"
 		DO_UBOOT=1
-		BOOTLOADER="BEAGLEBOARD_CX"
+		conf_board="BEAGLEBOARD"
 		is_omap
 		;;
 	mx6qsabrelite)
 		SYSTEM="mx6qsabrelite"
-		BOOTLOADER="MX6QSABRELITE_D_SPI_RECOVERY"
+		conf_board="MX6QSABRELITE_D_SPI_RECOVERY"
 		is_imx
 		dd_seek="2"
 		dd_bs="512"
 		;;
 	mx6qsabrelite_uboot)
 		SYSTEM="mx6qsabrelite"
-		BOOTLOADER="MX6QSABRELITE_D"
+		conf_board="MX6QSABRELITE_D"
 		is_imx
 		dd_seek="2"
 		dd_bs="512"
 		;;
 	mx6qsabrelite_sd)
 		SYSTEM="mx6qsabrelite_sd"
-		BOOTLOADER="MX6QSABRELITE_D_SPI_TO_SD"
+		conf_board="MX6QSABRELITE_D_SPI_TO_SD"
 		is_imx
 		boot_name="iMX6DQ_SPI_to_uSDHC3.bin"
 		offset="0x00"
@@ -508,7 +523,7 @@ function check_uboot_type {
 	esac
 }
 
-function usage {
+usage () {
 	echo "usage: sudo $(basename $0) --mmc /dev/sdX --uboot <dev board>"
 	#tabed to match 
 		cat <<-__EOF__
@@ -538,7 +553,7 @@ function usage {
 	exit
 }
 
-function checkparm {
+checkparm () {
 	if [ "$(echo $1|grep ^'\-')" ] ; then
 		echo "E: Need an argument"
 		usage
