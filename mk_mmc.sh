@@ -278,7 +278,7 @@ populate_boot () {
 		fi
 
 		case "${SYSTEM}" in
-		beagle_bx|beagle_cx)
+		omap3_beagle)
 			cat > ${TEMPDIR}/disk/reset.cmd <<-__EOF__
 				echo "Starting NAND UPGRADE, do not REMOVE SD CARD or POWER till Complete"
 				fatload mmc 0:1 0x80200000 ${spl_name}
@@ -310,68 +310,6 @@ populate_boot () {
 			__EOF__
 
 			cp -v ${TEMPDIR}/disk/uEnv.txt ${TEMPDIR}/disk/user.txt
-			;;
-		mx6qsabrelite)
-			cat > ${TEMPDIR}/disk/reset.cmd <<-__EOF__
-				echo "check U-Boot" ;
-				if ext2load mmc \${disk}:1 12000000 ${boot_name} ; then
-					echo "read \${filesize} bytes from SD card" ;
-					if sf probe 1 27000000 ; then
-						echo "probed SPI ROM" ;
-						if sf read 0x12400000 0 \${filesize} ; then
-							if cmp.b 0x12000000 0x12400000 \${filesize} ; then
-								echo "------- U-Boot versions match" ;
-							else
-								echo "erasing" ;
-								sf erase 0 0x40000 ;
-								echo "programming" ;
-								sf write 0x12000000 ${offset} \${filesize} ;
-							fi
-						else
-							echo "Error reading boot loader from EEPROM" ;
-						fi
-					else
-						echo "Error initializing EEPROM" ;
-					fi ;
-				else
-					echo "No U-Boot image found on SD card" ;
-				fi
-
-			__EOF__
-
-			mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${TEMPDIR}/disk/reset.cmd ${TEMPDIR}/disk/boot.scr
-			sudo cp -v ${TEMPDIR}/disk/boot.scr ${TEMPDIR}/disk/6q_bootscript
-			;;
-		mx6qsabrelite_sd)
-			cat > ${TEMPDIR}/disk/reset.cmd <<-__EOF__
-				echo "check U-Boot" ;
-				if ext2load mmc \${disk}:1 12000000 ${boot_name} ; then
-					echo "read \${filesize} bytes from SD card" ;
-					if sf probe 1 27000000 ; then
-						echo "probed SPI ROM" ;
-						if sf read 0x12400000 0 \${filesize} ; then
-							if cmp.b 0x12000000 0x12400000 \${filesize} ; then
-								echo "------- U-Boot versions match" ;
-							else
-								echo "erasing" ;
-								sf erase 0 0x40000 ;
-								echo "programming" ;
-								sf write 0x12000000 ${offset} \${filesize} ;
-							fi
-						else
-							echo "Error reading boot loader from EEPROM" ;
-						fi
-					else
-						echo "Error initializing EEPROM" ;
-					fi ;
-				else
-					echo "No U-Boot image found on SD card" ;
-				fi
-
-			__EOF__
-
-			mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "Reset NAND" -d ${TEMPDIR}/disk/reset.cmd ${TEMPDIR}/disk/boot.scr
-			sudo cp -v ${TEMPDIR}/disk/boot.scr ${TEMPDIR}/disk/6q_bootscript
 			;;
 		esac
 
@@ -468,39 +406,11 @@ check_uboot_type () {
 	boot_partition_size="50"
 
 	case "${UBOOT_TYPE}" in
-	beagle_bx)
-		SYSTEM="beagle_bx"
+	beagle_bx|beagle_cx|omap3_beagle)
+		SYSTEM="omap3_beagle"
 		DO_UBOOT=1
-		conf_board="BEAGLEBOARD"
+		conf_board="omap3_beagle"
 		is_omap
-		;;
-	beagle_cx)
-		SYSTEM="beagle_cx"
-		DO_UBOOT=1
-		conf_board="BEAGLEBOARD"
-		is_omap
-		;;
-	mx6qsabrelite)
-		SYSTEM="mx6qsabrelite"
-		conf_board="MX6QSABRELITE_D_SPI_RECOVERY"
-		is_imx
-		dd_seek="2"
-		dd_bs="512"
-		;;
-	mx6qsabrelite_uboot)
-		SYSTEM="mx6qsabrelite"
-		conf_board="MX6QSABRELITE_D"
-		is_imx
-		dd_seek="2"
-		dd_bs="512"
-		;;
-	mx6qsabrelite_sd)
-		SYSTEM="mx6qsabrelite_sd"
-		conf_board="MX6QSABRELITE_D_SPI_TO_SD"
-		is_imx
-		boot_name="iMX6DQ_SPI_to_uSDHC3.bin"
-		offset="0x00"
-		unset bootloader_location
 		;;
 	*)
 		IN_VALID_UBOOT=1
@@ -512,10 +422,6 @@ check_uboot_type () {
 			        TI:
 			                beagle_bx - <BeagleBoard Ax/Bx>
 			                beagle_cx - <BeagleBoard Cx>
-			        Freescale:
-			                mx6qsabrelite - (boot off SPI)
-			                mx6qsabrelite_sd - (boot off SD)
-			                mx6qsabrelite_uboot - (mainline testing DO NOT USE)
 			-----------------------------
 		__EOF__
 		exit

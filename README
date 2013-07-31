@@ -8,11 +8,7 @@ Required Options:
 
 --uboot <dev board>
         TI:
-                beagle_bx - <BeagleBoard Ax/Bx>
-                beagle_cx - <BeagleBoard Cx>
-        Freescale:
-                mx6qsabrelite - (boot off SPI)
-                mx6qsabrelite_sd - (boot off SD)
+                omap3_beagle - <BeagleBoard Ax/Bx/Cx/Dx>
 
 Additional Options:
         -h --help
@@ -20,17 +16,11 @@ Additional Options:
 --probe-mmc
         <list all partitions: sudo ./mk_mmc.sh --probe-mmc>
 
-beagle_bx - <BeagleBoard Ax/Bx>
-beagle_cx - <BeagleBoard Cx>
+omap3_beagle - <BeagleBoard Ax/Bx/Cx/Dx>
 	1: Place MMC card in Beagle
 	2: Push/Hold User Button Down
 	3: Apply Power
 	4: After U-boot loads, Let Off User Button
 	5: Wait for Flashing to end
 	6: Power down, remove/edit boot.scr from MMC card
-
-mx6qsabrelite - <Flash board to boot of SPI (old u-boot with SPI support)>
-	1: Plugin Card and Boot.
-mx6qsabrelite_sd - <Flash board to boot of SD Card (newer u-boot without SPI)>
-	1: Plugin Card and Boot.
 
