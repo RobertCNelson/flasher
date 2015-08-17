@@ -226,6 +226,10 @@ no_boot_on_drive () {
 format_boot_partition () {
 	echo "Formating Boot Partition"
 	echo "-----------------------------"
+	while ! [ -e ${MMC}${PARTITION_PREFIX}1 ]; do
+	  echo "${MMC}${PARTITION_PREFIX}1 not found, sleeping 1s..."
+		sleep 1
+	done
 	if [ "x${boot_fstype}" = "xfat" ] ; then
 		boot_part_format="vfat"
 		mkfs.vfat -F 16 ${MMC}${PARTITION_PREFIX}1 -n ${BOOT_LABEL}
@@ -256,12 +260,20 @@ create_partitions () {
 populate_boot () {
 	echo "Populating Boot Partition"
 	echo "-----------------------------"
+	while ! [ -e ${MMC}${PARTITION_PREFIX}1 ]; do
+	  echo "${MMC}${PARTITION_PREFIX}1 not found, sleeping 1s..."
+		sleep 1
+	done
 
 	partprobe ${MMC}
 	if [ ! -d ${TEMPDIR}/disk ] ; then
 		mkdir -p ${TEMPDIR}/disk
 	fi
 
+	while ! [ -e ${MMC}${PARTITION_PREFIX}1 ]; do
+	  echo "${MMC}${PARTITION_PREFIX}1 not found, sleeping 1s..."
+		sleep 1
+	done
 	if mount -t ${boot_part_format} ${MMC}${PARTITION_PREFIX}1 ${TEMPDIR}/disk; then
 
 		if [ "${spl_name}" ] ; then
